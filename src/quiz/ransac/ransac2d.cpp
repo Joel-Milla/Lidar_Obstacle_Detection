@@ -77,20 +77,25 @@ std::unordered_set<int> Ransac(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int ma
 		long long int sizeCloud = cloud->points.size();
 		long long int index1 = rand() % sizeCloud;
 		long long int index2 = rand() % sizeCloud;
+		long long int index3 = rand() % sizeCloud;
 
 		pcl::PointXYZ point1 = cloud->points[index1];
 		pcl::PointXYZ point2 = cloud->points[index2];
+		pcl::PointXYZ point3 = cloud->points[index3];
 
-		long long int A = point1.y - point2.y;
-		long long int B = point2.x - point1.x;
-		long long int C = (point1.x * point2.y) - (point2.x * point1.y);
+		long long int A = ( (point2.y - point1.y)*(point3.z - point1.z) - (point2.z - point1.z) * (point3.y - point1.y));
+		long long int B = ( (point2.z - point1.z)*(point3.x - point1.x) - (point2.x - point1.x) * (point3.z - point1.z));
+		long long int C = ( (point2.x - point1.x)*(point3.y - point1.y) - (point2.y - point1.y) * (point3.x - point1.x));
+		long long int D = -1 * ((A * point1.x) + (B * point1.y) + (C * point1.z));
 
 		// Measure distance between every point and fitted line
 		for (int indx = 0; indx < cloud->points.size(); indx++) {
 			const pcl::PointXYZ& point = cloud->points[indx];
 			float x = point.x;
 			float y = point.y;
-			double distance = abs( (A * x) + (B * y) + (C) ) / sqrt( (A * A) + (B * B) );
+			float z = point.z;
+
+			double distance = abs( (A * x) + (B * y) + (C * z) + (D) ) / sqrt( (A * A) + (B * B) + (C * C));
 			// If distance is smaller than threshold count it as inlier
 			if (distance < distanceTol)
 				inliersResultTemp.insert(indx);
@@ -113,11 +118,13 @@ int main ()
 	pcl::visualization::PCLVisualizer::Ptr viewer = initScene();
 
 	// Create data
-	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = CreateData();
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = CreateData3D();
 	
 
 	// TODO: Change the max iteration and distance tolerance arguments for Ransac function
-	std::unordered_set<int> inliers = Ransac(cloud, 50, 0.5);
+	// randombly speaking, the more % you have of outliers, the more chance the model has on finding the line. Because can use inliers to fit the model. However, if have low % of inliers, will need more iteartions to find the line
+	// the distance threshold is related to noise, the more noise you have the higher a distance threshold. because if have noise, then it means that your actual inliers will be more disperse and in general values will be more disperesed, so you want them to be included.
+	std::unordered_set<int> inliers = Ransac(cloud, 10, 0.5);
 
 	pcl::PointCloud<pcl::PointXYZ>::Ptr  cloudInliers(new pcl::PointCloud<pcl::PointXYZ>());
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudOutliers(new pcl::PointCloud<pcl::PointXYZ>());
