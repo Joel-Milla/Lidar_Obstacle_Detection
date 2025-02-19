@@ -57,13 +57,26 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
     // renderPointCloud(viewer, inputCloud, "Point Cloud", color);
 
     // TODO:: Point processor that contains all the methods for filtering, segmentaion, clustering, etc. 
-    // ProcessPointClouds<pcl::PointXYZ>* pointProcessor = new ProcessPointClouds<pcl::PointXYZ>();
 
     ProcessPointClouds<pcl::PointXYZ> pointProcessor;
     std::pair<pcl::PointCloud<pcl::PointXYZ>::Ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr> segmentCloud = pointProcessor.SegmentPlane(inputCloud, 100, 0.2);
-    renderPointCloud(viewer, segmentCloud.first, "objectCloud", Color(1,0,0));
-    renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,1,0));
+    // renderPointCloud(viewer, segmentCloud.first, "objectCloud", Color(1,0,0));
+    // renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,1,0));
     
+    // TODO: Clustering process that clusters the different objects within the PCD
+    // Pass to function Clustering all the points that are not part of the road/plane of the car
+    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> cloudClusters = pointProcessor.Clustering(segmentCloud.first, 1, 20, 500);
+	
+    int clusterId = 0;
+    std::vector<Color> colors = {Color(1,0,0), Color(0,1,0), Color(0,0,1)};
+    
+    for(pcl::PointCloud<pcl::PointXYZ>::Ptr cluster : cloudClusters)
+    {
+        std::cout << "cluster size ";
+        pointProcessor.numPoints(cluster);
+        renderPointCloud(viewer,cluster,"obstCloud"+std::to_string(clusterId),colors[clusterId]);
+        ++clusterId;
+    }
 }
 
 
