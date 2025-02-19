@@ -1,0 +1,12 @@
+# SSH credentials
+SSH_USER="root"
+SSH_HOST="localhost"
+SSH_PORT="2222"
+SSH_PASS="password"
+
+# Command to run inside the SSH session
+REMOTE_CMD="cd ../app/build && bash"
+
+# Connect via SSH and execute the command
+sshpass -p "$SSH_PASS" ssh -X -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" -o StrictHostKeyChecking=no -t "$REMOTE_CMD"
+
