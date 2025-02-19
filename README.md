@@ -13,6 +13,10 @@ Then, we used segmentation methods using RANSAC algorihtm and extraction methods
 
 [!segmentation](./README_FILES/segmentation.png)
 
+Next, we implemented euclidan clustr exraction from PCL to obtain the different clusters of the PCD. Also, we dislayed each different cluster as shown in image belwo about different objects around lidar in simulator.
+
+[!clustering](../SFND_Lidar_Obstacle_Detection/README_FILES/clustering.png)
+
 ### Sensor Fusion course for self-driving cars.
 
 This course is about sensor fusion, which is the process of taking data from multiple sensors and combining it to give us a better understanding of the world around us. The focus is on two sensors, lidar, and radar.

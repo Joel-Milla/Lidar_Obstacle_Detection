@@ -143,9 +143,14 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
 
         // Iterate each index of cluster and save it in the cluster
         for (const auto& idx : cluster.indices) {
-            cloud_cluster->push_back((*cloud)[idx]);
+            cloud_cluster->push_back(cloud->points[idx]);
         }
 
+        // set meta information
+        cloud_cluster->width = cloud_cluster->points.size();
+        cloud_cluster->height = 1;
+        cloud_cluster->is_dense = true;
+        
         clusters.push_back(cloud_cluster);
     }
 
