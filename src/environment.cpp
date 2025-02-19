@@ -49,6 +49,7 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
     Lidar* lidar = new Lidar(cars, 0);
     pcl::PointCloud<pcl::PointXYZ>::Ptr inputCloud = lidar->scan(); // This already returns a pointer, a smart pointer that manages memory deallocation, etc. 
     renderRays(viewer, lidar->position, inputCloud);
+    // working as expected
 
     // TODO:: Create point processor
   

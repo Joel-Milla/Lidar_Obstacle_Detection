@@ -41,9 +41,9 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100 \
 WORKDIR /app
 
 # Copy project files into container
-COPY . /app
+# COPY . /app
 
 # Run CMake and compile
-RUN mkdir build && cd build && cmake .. && make -j$(nproc)
+# RUN mkdir build && cd build && cmake .. && make -j$(nproc)
 # run ssh daemon
 CMD ["/usr/sbin/sshd", "-D"]
