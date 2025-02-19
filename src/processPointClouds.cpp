@@ -38,12 +38,28 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(ty
 }
 
 
+/*
+What this code does is separate point clouds. The plane would be the road, and the inliers are the points that form part of the plane/road. So by extracing the points taht are not inliers (not part of road), you obtain the objects which are the cars. 
+
+Function: creates two point clouds, the obstacles and road. Road points same as inliers (that belong to plane/road). Use extract to obtain the obstacles. 
+*/
 template<typename PointT>
 std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::SeparateClouds(pcl::PointIndices::Ptr inliers, typename pcl::PointCloud<PointT>::Ptr cloud) 
 {
-  // TODO: Create two new point clouds, one cloud with obstacles and other with segmented plane
+    // TODO: Create two new point clouds, one cloud with obstacles and other with segmented plane
 
-    std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> segResult(cloud, cloud);
+    pcl::ExtractIndices<PointT> extract; // create object that make extractions
+    extract.setInputCloud (cloud);    
+
+    typename pcl::PointCloud<PointT>::Ptr plane_points {new pcl::PointCloud<PointT> ()};
+    extract.setIndices (inliers);
+    extract.filter (*plane_points); // Filter the plane points and save them
+
+    typename pcl::PointCloud<PointT>::Ptr objects_points {new pcl::PointCloud<PointT>()};
+    extract.setNegative (true); // Apply the same filter as before, but now excluding the inliers
+    extract.filter(*objects_points);
+
+    std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> segResult(objects_points, plane_points);
     return segResult;
 }
 
@@ -64,8 +80,8 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
     // TODO:: Fill in this function to find inliers for the cloud.
     // Create the segmentation object
     pcl::SACSegmentation<pcl::PointXYZ> seg; 
-	pcl::PointIndices::Ptr inliers; // ptr to the inliers
-    pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients); // coefficients define what the plane is
+	pcl::PointIndices::Ptr inliers {new pcl::PointIndices}; // ptr to the inliers
+    pcl::ModelCoefficients::Ptr coefficients {new pcl::ModelCoefficients}; // coefficients define what the plane is
 
     seg.setOptimizeCoefficients(true); // if true, then try to get the best model
     seg.setModelType (pcl::SACMODEL_PLANE); // telling you are looking for a plane model

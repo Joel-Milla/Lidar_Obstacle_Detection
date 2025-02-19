@@ -100,7 +100,7 @@ struct Lidar
 		double steepestAngle =  30.0*(-pi/180);
 		double angleRange = 26.0*(pi/180);
 		// TODO:: set to pi/64 to get higher resoultion pcd
-		double horizontalAngleInc = pi/64; // this is the angular angle, and want to reduce it so beams are being more faster spreading 
+		double horizontalAngleInc = pi/640; // this is the angular angle, and want to reduce it so beams are being more faster spreading 
 
 		double angleIncrement = angleRange/numLayers;
 
