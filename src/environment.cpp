@@ -42,14 +42,19 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
     // ----------------------------------------------------
     
     // RENDER OPTIONS
-    bool renderScene = true;
+    bool renderScene = false; // A value of true shows the cars in the scene, with false it removes the cars and street from simulator
     std::vector<Car> cars = initHighway(renderScene, viewer);
     
     // TODO:: Create lidar sensor 
     Lidar* lidar = new Lidar(cars, 0);
     pcl::PointCloud<pcl::PointXYZ>::Ptr inputCloud = lidar->scan(); // This already returns a pointer, a smart pointer that manages memory deallocation, etc. 
-    renderRays(viewer, lidar->position, inputCloud);
-    // working as expected
+
+    // Render the rays
+    // renderRays(viewer, lidar->position, inputCloud);
+
+    // Render the point cloud
+    Color color = Color(255.0,255.0,255.0);
+    renderPointCloud(viewer, inputCloud, "Point Cloud", color);
 
     // TODO:: Create point processor
   

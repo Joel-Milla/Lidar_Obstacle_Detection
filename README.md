@@ -6,6 +6,9 @@
 We first create a simulator of the Lidar throwing beams in the space, for future processing. 
 ![simulator](./README_FILES/simulator.png)
 
+Then, we modify the simulator to only render the point cloud data based on the rays that were previously created.
+[!pointCloud](./README_FILES/simulator_point_cloud.png)
+
 ### Sensor Fusion course for self-driving cars.
 
 This course is about sensor fusion, which is the process of taking data from multiple sensors and combining it to give us a better understanding of the world around us. The focus is on two sensors, lidar, and radar.
