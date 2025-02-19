@@ -90,7 +90,7 @@ struct Lidar
 		maxDistance = 50;
 		resoultion = 0.2;
 		// TODO:: set sderr to 0.2 to get more interesting pcd files
-		sderr = 0.2; // add noise to simulate real environemnt where there is noise. This is in meters
+		sderr = 0.3; // add noise to simulate real environemnt where there is noise. This is in meters
 		cars = setCars;
 		groundSlope = setGroundSlope;
 

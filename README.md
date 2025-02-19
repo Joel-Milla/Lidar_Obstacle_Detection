@@ -16,6 +16,8 @@ Then, we used segmentation methods using RANSAC algorihtm and extraction methods
 Next, we implemented euclidan clustr exraction from PCL to obtain the different clusters of the PCD. Also, we dislayed each different cluster as shown in image belwo about different objects around lidar in simulator.
 
 [!clustering](../SFND_Lidar_Obstacle_Detection/README_FILES/clustering.png)
+And now displaying also the plane/road that was segmented at first using plane model segmentation usig RANSAC, we obtain our objects and plane in the next shape:
+[!complete_clustering](./README_FILES/complete_cluster.png)
 
 ### Sensor Fusion course for self-driving cars.
 

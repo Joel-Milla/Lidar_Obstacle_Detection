@@ -54,7 +54,7 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
 
     // Render the point cloud
     Color color = Color(0.0,255.0,0.0);
-    // renderPointCloud(viewer, inputCloud, "Point Cloud", color);
+    renderPointCloud(viewer, inputCloud, "Point Cloud", color);
 
     // TODO:: Point processor that contains all the methods for filtering, segmentaion, clustering, etc. 
 
@@ -68,7 +68,7 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
     std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> cloudClusters = pointProcessor.Clustering(segmentCloud.first, 1, 20, 500);
 	
     int clusterId = 0;
-    std::vector<Color> colors = {Color(1,0,0), Color(0,1,0), Color(0,0,1)};
+    std::vector<Color> colors = {Color(1,0,0), Color(1,1,0), Color(0,0,1)};
     
     for(pcl::PointCloud<pcl::PointXYZ>::Ptr cluster : cloudClusters)
     {
