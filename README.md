@@ -2,6 +2,10 @@
 
 <img src="media/ObstacleDetectionFPS.gif" width="700" height="400" />
 
+### Project 
+We first create a simulator of the Lidar throwing beams in the space, for future processing. 
+![simulator](./README_FILES/simulator.png)
+
 ### Sensor Fusion course for self-driving cars.
 
 This course is about sensor fusion, which is the process of taking data from multiple sensors and combining it to give us a better understanding of the world around us. The focus is on two sensors, lidar, and radar.
