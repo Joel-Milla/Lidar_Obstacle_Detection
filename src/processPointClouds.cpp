@@ -47,19 +47,51 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
     return segResult;
 }
 
+/* 
+Segmentation uses iterative approach, the more iterations the more confident, but also takes longer. Algirthm fits plane to a point and uses distanceTolerance to decide which points belong to the plane. 
 
+Params
+@cloud : cloud to be segmented
+@max iterations: number of iterations
+@ditanceThreshold: determines how close a point must be to the model to be considered an inlier
+*/
 template<typename PointT>
 std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::SegmentPlane(typename pcl::PointCloud<PointT>::Ptr cloud, int maxIterations, float distanceThreshold)
 {
     // Time segmentation process
     auto startTime = std::chrono::steady_clock::now();
-	pcl::PointIndices::Ptr inliers;
+
     // TODO:: Fill in this function to find inliers for the cloud.
+    // Create the segmentation object
+    pcl::SACSegmentation<pcl::PointXYZ> seg; 
+	pcl::PointIndices::Ptr inliers; // ptr to the inliers
+    pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients); // coefficients define what the plane is
+
+    seg.setOptimizeCoefficients(true); // if true, then try to get the best model
+    seg.setModelType (pcl::SACMODEL_PLANE); // telling you are looking for a plane model
+    seg.setMethodType (pcl::SAC_RANSAC); // telling that the way of looking is ransac - random sample concensus. RANSAC is the importnat algorithm that runs behind everything
+    seg.setMaxIterations (maxIterations);
+    seg.setDistanceThreshold (distanceThreshold);
+
+    // Set the cloud and do the segmentation
+    seg.setInputCloud (cloud);
+    seg.segment (*inliers, *coefficients); 
+    /*
+    inliers: use to separate the point cloud in two pieces
+    coeffcients: can be used to render the plane
+    */
+
+    // manage possible errors
+    if (inliers->indices.size () == 0) // didnt found any model that fits the data
+    {
+      PCL_ERROR ("Could not estimate a planar model for the given dataset.\n");
+    }
 
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     std::cout << "plane segmentation took " << elapsedTime.count() << " milliseconds" << std::endl;
 
+    // The separte clouds returns a pair with the inliers (the points that are part of the plane) and the cloud that was analyzed (so the full point cloud without segmentation)
     std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> segResult = SeparateClouds(inliers,cloud);
     return segResult;
 }

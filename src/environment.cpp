@@ -56,7 +56,11 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
     Color color = Color(255.0,255.0,255.0);
     renderPointCloud(viewer, inputCloud, "Point Cloud", color);
 
-    // TODO:: Create point processor
+    // TODO:: Point processor that contains all the methods for filtering, segmentaion, clustering, etc. 
+    // ProcessPointClouds<pcl::PointXYZ>* pointProcessor = new ProcessPointClouds<pcl::PointXYZ>();
+
+    ProcessPointClouds<pcl::PointXYZ> pointProcessor;
+    // pointProcessor.SegmentPlane(inputCloud, 1000, 0.01);
   
 }
 
