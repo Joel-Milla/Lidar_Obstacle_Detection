@@ -39,6 +39,10 @@ The next steps where preparing image for obstacle detections:
 
 [!step2](./README_FILES/step2.png)
 
+3. Step 3 was applying bounding boxes around individual clusters. 
+
+[!step3](./README_FILES/step3.png)
+
 
 
 ### Sensor Fusion course for self-driving cars.
