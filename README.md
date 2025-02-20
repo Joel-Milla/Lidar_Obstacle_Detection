@@ -26,6 +26,9 @@ For the last part, I implemented boudning boxes around the objects that exists i
 After all of this, we now render real PCD data to work and apply the functions that were previously created. An initial view of the PCD can be seen below of a city block.
 [!cityBlock](./README_FILES/real_pcd.png)
 
+For extra cleaning and easier processing, we also created a function to remove the points that the lidar was reading from the roof of the car. We also applied vox grid filtering to dowsample the points of our PCD for easier calculations and selected a region of interest to only focus on the impornat parts of the point cloud. After all this, we also used function to filter and extract the point cloud information of the roof. 
+[!filtering_pcd](./README_FILES/after_cleaning.png)
+
 
 
 ### Sensor Fusion course for self-driving cars.
