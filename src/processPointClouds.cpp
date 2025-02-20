@@ -1,6 +1,7 @@
 // PCL lib Functions for processing point clouds 
 
 #include "processPointClouds.h"
+// #include "./helper/segment.h"
 
 
 //constructor:
@@ -163,19 +164,26 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
 
     // TODO:: Fill in this function to find inliers for the cloud.
     // Create the segmentation object
-    pcl::SACSegmentation<PointT> seg; 
 	pcl::PointIndices::Ptr inliers {new pcl::PointIndices}; // ptr to the inliers
+    
+    //* CODE USING PCL BUILTIN RANSAC
+    pcl::SACSegmentation<PointT> seg; 
     pcl::ModelCoefficients::Ptr coefficients {new pcl::ModelCoefficients}; // coefficients define what the plane is
-
+    
     seg.setOptimizeCoefficients(true); // if true, then try to get the best model
     seg.setModelType (pcl::SACMODEL_PLANE); // telling you are looking for a plane model
     seg.setMethodType (pcl::SAC_RANSAC); // telling that the way of looking is ransac - random sample concensus. RANSAC is the importnat algorithm that runs behind everything
     seg.setMaxIterations (maxIterations);
     seg.setDistanceThreshold (distanceThreshold);
-
+    
     // Set the cloud and do the segmentation
     seg.setInputCloud (cloud);
     seg.segment (*inliers, *coefficients); 
+    
+
+    //* CODE USING MY OWN RANSAC ALGORITHM
+    // Segment<PointT> seg;
+    // seg.Ransac(inliers, cloud, maxIterations, distanceThreshold);
     /*
     inliers: use to separate the point cloud in two pieces
     coeffcients: can be used to render the plane
