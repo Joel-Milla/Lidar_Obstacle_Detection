@@ -86,11 +86,21 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer) {
 
     ProcessPointClouds<pcl::PointXYZI>* pointProcessorI = new ProcessPointClouds<pcl::PointXYZI>();
     pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloud = pointProcessorI->loadPcd("../src/sensors/data/pcd/data_1/0000000000.pcd");
-    // renderPointCloud(viewer,inputCloud,"inputCloud"); // render the whole data
 
-    // Apply filter cloud to remove the downsample the amount of data in PCD for faster data management. 
-    typename pcl::PointCloud<pcl::PointXYZI>::Ptr filterCloud = pointProcessorI->FilterCloud(inputCloud, 0.2 , Eigen::Vector4f (-10, -5, -10, 1), Eigen::Vector4f ( 10, 6, 10, 1));
-    renderPointCloud(viewer,filterCloud,"filterCloud");
+    // Obtain roof points
+    std::pair<typename pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointIndices::Ptr> roof = pointProcessorI->ObtainRoofPoints(inputCloud);
+
+    // Apply filter cloud to remove the downsample the amount of data in PCD for faster data management.
+    typename pcl::PointCloud<pcl::PointXYZI>::Ptr filterCloud = pointProcessorI->FilterCloud(inputCloud, 0.2 , Eigen::Vector4f (-10, -5, -10, 1), Eigen::Vector4f ( 26, 6, 10, 1));
+    // renderPointCloud(viewer,filterCloud,"filterCloud"); // render the filtered cloud
+    
+    //* SEGMENT PLANE VS OBJECTS VS ROOF
+    std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segmentCloud = pointProcessorI->SegmentPlane(filterCloud, 100, 0.2);
+    renderPointCloud(viewer, segmentCloud.first, "objectCloud", Color(1,0,0));
+    renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,1,0));
+
+    Box roofBox = pointProcessorI->BoundingBox(roof.first);
+    renderBox(viewer, roofBox, '1', Color(1,0,1));
 }
 
 //setAngle: SWITCH CAMERA ANGLE {XY, TopDown, Side, FPS}

@@ -32,6 +32,8 @@ public:
 
     typename pcl::PointCloud<PointT>::Ptr FilterCloud(typename pcl::PointCloud<PointT>::Ptr cloud, float filterRes, Eigen::Vector4f minPoint, Eigen::Vector4f maxPoint);
 
+    std::pair<typename pcl::PointCloud<PointT>::Ptr, pcl::PointIndices::Ptr> ObtainRoofPoints (typename pcl::PointCloud<PointT>::Ptr cloud);
+
     typename pcl::PointCloud<PointT>::Ptr RemoveRoofPoints(typename pcl::PointCloud<PointT>::Ptr cloud);
 
     std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> SeparateClouds(pcl::PointIndices::Ptr inliers, typename pcl::PointCloud<PointT>::Ptr cloud);

@@ -19,19 +19,19 @@ void ProcessPointClouds<PointT>::numPoints(typename pcl::PointCloud<PointT>::Ptr
     std::cout << cloud->points.size() << std::endl;
 }
 
-// function that removes points from the car
+
 /*
-Function to remove the points that collide and are retrieve by the lidar from the car roof
-Params
+Function that returns both the indices and the cluster of the rooftop
+Params:
 @cloud -> cloud to be filtered that has all the points
 
 Returns
-@filtered_cloud -> cloud without rooftop points
+@filtered_cloud -> pair with the cloud of points of rooftop and also its indices
 */
-
 template<typename PointT>
-typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::RemoveRoofPoints (typename pcl::PointCloud<PointT>::Ptr cloud) {
+std::pair<typename pcl::PointCloud<PointT>::Ptr, pcl::PointIndices::Ptr> ProcessPointClouds<PointT>::ObtainRoofPoints (typename pcl::PointCloud<PointT>::Ptr cloud) {
     typename pcl::PointCloud<PointT>::Ptr cloud_filtered (new pcl::PointCloud<PointT> ());
+    pcl::PointIndices::Ptr inliers {new pcl::PointIndices};
 
     //* CROPBOX DEFINITION
     // Define the limits of the cropbox
@@ -48,10 +48,28 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::RemoveRoofPoin
 
     // Indices to remove
     cropBoxFilter.filter (indices);
+    cropBoxFilter.filter (*cloud_filtered);
+
+    inliers->indices = indices;
+
+    return {cloud_filtered, inliers};
+}
+
+/*
+Function to remove the points that collide and are retrieve by the lidar from the car roof
+Params
+@cloud -> cloud to be filtered that has all the points
+
+Returns
+@filtered_cloud -> cloud without rooftop points
+*/
+template<typename PointT>
+typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::RemoveRoofPoints (typename pcl::PointCloud<PointT>::Ptr cloud) {
+    typename pcl::PointCloud<PointT>::Ptr cloud_filtered (new pcl::PointCloud<PointT> ());
     
     //* FILTERING OF INDICES
-    pcl::PointIndices::Ptr inliers {new pcl::PointIndices};
-    inliers->indices = indices; // Save the vector<int> indices into a PointIndices object to be able to call filter function
+    std::pair<typename pcl::PointCloud<PointT>::Ptr, pcl::PointIndices::Ptr> roof = ObtainRoofPoints(cloud);
+    pcl::PointIndices::Ptr inliers = roof.second;
 
     pcl::ExtractIndices<PointT> filter;
     filter.setInputCloud (cloud);
@@ -63,9 +81,6 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::RemoveRoofPoin
 
     return cloud_filtered;
 }
-
-// use extractIndices to obtain cloud that filters (removes) the indices that are close
-// return that cloud
 
 template<typename PointT>
 typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(typename pcl::PointCloud<PointT>::Ptr cloud, float filterRes, Eigen::Vector4f minPoint, Eigen::Vector4f maxPoint)
@@ -148,7 +163,7 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
 
     // TODO:: Fill in this function to find inliers for the cloud.
     // Create the segmentation object
-    pcl::SACSegmentation<pcl::PointXYZ> seg; 
+    pcl::SACSegmentation<PointT> seg; 
 	pcl::PointIndices::Ptr inliers {new pcl::PointIndices}; // ptr to the inliers
     pcl::ModelCoefficients::Ptr coefficients {new pcl::ModelCoefficients}; // coefficients define what the plane is
 
