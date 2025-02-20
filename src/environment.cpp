@@ -86,7 +86,9 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer) {
 
     ProcessPointClouds<pcl::PointXYZI>* pointProcessorI = new ProcessPointClouds<pcl::PointXYZI>();
     pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloud = pointProcessorI->loadPcd("../src/sensors/data/pcd/data_1/0000000000.pcd");
-    // renderPointCloud(viewer,inputCloud,"inputCloud");
+    // renderPointCloud(viewer,inputCloud,"inputCloud"); // render the whole data
+
+    // Apply filter cloud to remove the downsample the amount of data in PCD for faster data management. 
     typename pcl::PointCloud<pcl::PointXYZI>::Ptr filterCloud = pointProcessorI->FilterCloud(inputCloud, 0.2 , Eigen::Vector4f (-10, -5, -10, 1), Eigen::Vector4f ( 10, 6, 10, 1));
     renderPointCloud(viewer,filterCloud,"filterCloud");
 }

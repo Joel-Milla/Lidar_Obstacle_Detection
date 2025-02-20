@@ -19,6 +19,53 @@ void ProcessPointClouds<PointT>::numPoints(typename pcl::PointCloud<PointT>::Ptr
     std::cout << cloud->points.size() << std::endl;
 }
 
+// function that removes points from the car
+/*
+Function to remove the points that collide and are retrieve by the lidar from the car roof
+Params
+@cloud -> cloud to be filtered that has all the points
+
+Returns
+@filtered_cloud -> cloud without rooftop points
+*/
+
+template<typename PointT>
+typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::RemoveRoofPoints (typename pcl::PointCloud<PointT>::Ptr cloud) {
+    typename pcl::PointCloud<PointT>::Ptr cloud_filtered (new pcl::PointCloud<PointT> ());
+
+    //* CROPBOX DEFINITION
+    // Define the limits of the cropbox
+    Eigen::Vector4f minPoint = Eigen::Vector4f (-1.5, -1.7, -1, 1);
+    Eigen::Vector4f maxPoint = Eigen::Vector4f (2.6, 1.7, -0.4, 1);
+
+    pcl::CropBox<PointT> cropBoxFilter (true);
+    cropBoxFilter.setInputCloud (cloud);
+
+    // Cropbox slighlty bigger then bounding box of points
+    std::vector<int> indices;
+    cropBoxFilter.setMin (minPoint);
+    cropBoxFilter.setMax (maxPoint);
+
+    // Indices to remove
+    cropBoxFilter.filter (indices);
+    
+    //* FILTERING OF INDICES
+    pcl::PointIndices::Ptr inliers {new pcl::PointIndices};
+    inliers->indices = indices; // Save the vector<int> indices into a PointIndices object to be able to call filter function
+
+    pcl::ExtractIndices<PointT> filter;
+    filter.setInputCloud (cloud);
+    filter.setIndices (inliers);
+
+    // extract all the cloud points that are not within the cropbox
+    filter.setNegative (true);
+    filter.filter (*cloud_filtered);
+
+    return cloud_filtered;
+}
+
+// use extractIndices to obtain cloud that filters (removes) the indices that are close
+// return that cloud
 
 template<typename PointT>
 typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(typename pcl::PointCloud<PointT>::Ptr cloud, float filterRes, Eigen::Vector4f minPoint, Eigen::Vector4f maxPoint)
@@ -38,7 +85,6 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(ty
     sor.filter (*cloud_filtered);
 
     //* CROPBOX FOR SELECTING REGION OF INTEREST
-    // Test the PointCloud<PointT> method
     typename pcl::PointCloud<PointT>::Ptr cloud_cropbox (new pcl::PointCloud<PointT>());
     pcl::CropBox<PointT> cropBoxFilter (true);
     cropBoxFilter.setInputCloud (cloud_filtered);
@@ -54,7 +100,9 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(ty
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     std::cout << "filtering took " << elapsedTime.count() << " milliseconds" << std::endl;
 
-    return cloud_cropbox;
+    typename pcl::PointCloud<PointT>::Ptr cloud_without_roofPoints = RemoveRoofPoints(cloud_cropbox);
+
+    return cloud_without_roofPoints;
 
 }
 
