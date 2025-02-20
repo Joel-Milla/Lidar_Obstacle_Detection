@@ -98,8 +98,10 @@ struct KdTree
 
 		// go left if max value is less than curr axes value. go right when min value is greater than curr axes value. 
 		int indx = level % 2;
-		bool go_left = (target[indx] + distanceTol) < node->point[indx];
-		bool go_right = (target[indx] - distanceTol) > node->point[indx];
+
+		// you go left when minAxes is left. why? because imagine, if are comapring xs, you will go left if the left part of the boudnary is less than current value, and then go also right if maxAxes of boudary is greater than your current value. 
+		bool go_left = (target[indx] - distanceTol) < node->point[indx];
+		bool go_right = (target[indx] + distanceTol) > node->point[indx];
 		
 		level += 1; // increase level for next call
 		
@@ -114,11 +116,11 @@ struct KdTree
 		
 		// Both of the conditionals are independent. Can occur that both get executed (when within boundaries) or just one of them
 
-		if (go_left || within_box) { // if only need to go left
+		if (go_left) { // if only need to go left
 			traverse(node->left, target, distanceTol, ids, level);
 		} 
 
-		if (go_right || within_box) { // if only need to go and check right boundary
+		if (go_right) { // if only need to go and check right boundary
 			traverse(node->right, target, distanceTol, ids, level);
 		}
 	}
