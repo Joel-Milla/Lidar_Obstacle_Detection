@@ -133,9 +133,11 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
     ec.setClusterTolerance(clusterTolerance); // value to low will create many clusters from one object, value to high multiple objects as one cluster.
     ec.setMinClusterSize(minSize);
     ec.setMaxClusterSize(maxSize);
-    ec.setSearchMethod(tree); // Search clusters using ktree
+    ec.setSearchMethod(tree); // Search clusters using kdtree
     ec.setInputCloud(cloud);
     ec.extract(cluster_indices);
+
+    
 
     // For each cluster, iterate through the indices and get the original point
     for (const auto& cluster : cluster_indices) {
