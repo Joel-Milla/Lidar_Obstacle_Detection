@@ -92,15 +92,33 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer) {
 
     // Apply filter cloud to remove the downsample the amount of data in PCD for faster data management.
     typename pcl::PointCloud<pcl::PointXYZI>::Ptr filterCloud = pointProcessorI->FilterCloud(inputCloud, 0.2 , Eigen::Vector4f (-10, -5, -10, 1), Eigen::Vector4f ( 26, 6, 10, 1));
-    // renderPointCloud(viewer,filterCloud,"filterCloud"); // render the filtered cloud
+    // renderPointCloud(viewer,filterCloud,"filterCloud", Color(0,1,0)); // render the filtered cloud?
     
-    //* SEGMENT PLANE VS OBJECTS VS ROOF
+    //* STEP1: SEGMENT PLANE VS OBJECTS VS ROOF
     std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segmentCloud = pointProcessorI->SegmentPlane(filterCloud, 100, 0.2);
-    renderPointCloud(viewer, segmentCloud.first, "objectCloud", Color(1,0,0));
-    renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,1,0));
+    // renderPointCloud(viewer, segmentCloud.first, "objectCloud", Color(1,0,0));
+    // renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,1,0));
 
     Box roofBox = pointProcessorI->BoundingBox(roof.first);
-    renderBox(viewer, roofBox, '1', Color(1,0,1));
+    // renderBox(viewer, roofBox, '1', Color(1,0,1));
+
+    //* STEP2: CLUSTER OBSTACLE CLOUD
+    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters = pointProcessorI->Clustering(segmentCloud.first, 0.55, 30, 600);
+
+    std::vector<Color> colors = {Color(1,0,0), Color(1,1,0), Color(0,0,1), Color(1,1,1)};
+    renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,1,0));
+    
+    for (int indx = 0; indx < cloudClusters.size(); indx++)
+    {
+        const pcl::PointCloud<pcl::PointXYZI>::Ptr& cluster = cloudClusters[indx];
+        std::cout << "cluster size ";
+        pointProcessorI->numPoints(cluster);
+        renderPointCloud(viewer, cluster, "obstCloud" + std::to_string(indx),colors[indx % 4]);
+
+        // Box box = pointProcessor.BoundingBox(cluster);
+        // renderBox(viewer, box, clusterId);
+    }
+
 }
 
 //setAngle: SWITCH CAMERA ANGLE {XY, TopDown, Side, FPS}
