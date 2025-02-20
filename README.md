@@ -35,6 +35,9 @@ The next steps where preparing image for obstacle detections:
 
 [!step1](./README_FILES/step1.png)
 
+2. Step 2 of obstacle detection is clustiner the obstacle cloud. We cluster the objects based on the proximity of the neighbors using the previous fucniton created using euclidean clustering optimized by kd tree. Diferent thresholds and min/max values were used to find and fit the best separation between objects. 
+
+[!step2](./README_FILES/step2.png)
 
 
 
