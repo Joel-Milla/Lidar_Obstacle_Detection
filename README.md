@@ -29,6 +29,13 @@ After all of this, we now render real PCD data to work and apply the functions t
 For extra cleaning and easier processing, we also created a function to remove the points that the lidar was reading from the roof of the car. We also applied vox grid filtering to dowsample the points of our PCD for easier calculations and selected a region of interest to only focus on the impornat parts of the point cloud. After all this, we also used function to filter and extract the point cloud information of the roof. 
 [!filtering_pcd](./README_FILES/after_cleaning.png)
 
+The next steps where preparing image for obstacle detections: 
+
+1. Segment the filter cloud in two parts, the road and the obstacles. We used the previous segmentined algorhtms to segement the objects from the road. Furtheremo, we display the roof of the car in a box to show the region of the roof of the car that was removed from clusters. 
+
+[!step1](./README_FILES/step1.png)
+
+
 
 
 ### Sensor Fusion course for self-driving cars.
