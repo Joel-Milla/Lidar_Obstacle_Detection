@@ -23,6 +23,9 @@ After that, I implemented my own Kd tree algorithm for insertion and searching. 
 [!own_euclidean_cluster](./README_FILES/euclidean_cluster_manual.png)
 For the last part, I implemented boudning boxes around the objects that exists in the plane. 
 [!objects](../SFND_Lidar_Obstacle_Detection/README_FILES/objects.png)
+After all of this, we now render real PCD data to work and apply the functions that were previously created. An initial view of the PCD can be seen below of a city block.
+[!cityBlock](./README_FILES/real_pcd.png)
+
 
 
 ### Sensor Fusion course for self-driving cars.
