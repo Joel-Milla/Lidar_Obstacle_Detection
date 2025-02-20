@@ -18,6 +18,10 @@ Next, we implemented euclidan clustr exraction from PCL to obtain the different 
 [!clustering](../SFND_Lidar_Obstacle_Detection/README_FILES/clustering.png)
 And now displaying also the plane/road that was segmented at first using plane model segmentation usig RANSAC, we obtain our objects and plane in the next shape:
 [!complete_clustering](./README_FILES/complete_cluster.png)
+After that, I implemented my own Kd tree algorithm for insertion and searching. And use that implmementation and constructed my own euclidan clustering algorithm to separate between datapoints. This is a result with 2D data.
+
+[!own_euclidean_cluster](./README_FILES/euclidean_cluster_manual.png)
+
 
 ### Sensor Fusion course for self-driving cars.
 
