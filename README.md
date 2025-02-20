@@ -43,6 +43,13 @@ The next steps where preparing image for obstacle detections:
 
 [!step3](./README_FILES/step3.png)
 
+4. The final step we created a stream of multiple pcd data to streamline it as a streaming video and apply in each frame the detection algorithm for multiple objects.
+<video width="320" height="240" controls>
+  <source src="./README_FILES/detection.webm" type="video/webm">
+</video>
+<video width="320" height="240" controls>
+  <source src="./README_FILES/video2.webm" type="video/webm">
+</video>
 
 
 ### Sensor Fusion course for self-driving cars.
