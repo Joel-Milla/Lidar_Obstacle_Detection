@@ -21,6 +21,8 @@ And now displaying also the plane/road that was segmented at first using plane m
 After that, I implemented my own Kd tree algorithm for insertion and searching. And use that implmementation and constructed my own euclidan clustering algorithm to separate between datapoints. This is a result with 2D data.
 
 [!own_euclidean_cluster](./README_FILES/euclidean_cluster_manual.png)
+For the last part, I implemented boudning boxes around the objects that exists in the plane. 
+[!objects](../SFND_Lidar_Obstacle_Detection/README_FILES/objects.png)
 
 
 ### Sensor Fusion course for self-driving cars.
