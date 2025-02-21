@@ -4,52 +4,57 @@
 
 ### Project 
 We first create a simulator of the Lidar throwing beams in the space, for future processing. 
-![simulator](./README_FILES/simulator.png)
+<img src="./README_FILES/simulator.png" width="700" height="400"/>
 
 Then, we modify the simulator to only render the point cloud data based on the rays that were previously created.
-[!pointCloud](./README_FILES/simulator_point_cloud.png)
+<img src="./README_FILES/simulator_point_cloud.png" width="700" height="400"/>
 
 Then, we used segmentation methods using RANSAC algorihtm and extraction methods to separate the plane and the objects detected from the point cloud. AFter that, the results of the different objects detected around the lidar are shown in the simulator.
 
-[!segmentation](./README_FILES/segmentation.png)
+<img src="./README_FILES/segmentation.png" width="700" height="400"/>
 
 Next, we implemented euclidan clustr exraction from PCL to obtain the different clusters of the PCD. Also, we dislayed each different cluster as shown in image belwo about different objects around lidar in simulator.
 
-[!clustering](../SFND_Lidar_Obstacle_Detection/README_FILES/clustering.png)
+<img src="./README_FILES/clustering.png" width="700" height="400"/>
+
 And now displaying also the plane/road that was segmented at first using plane model segmentation usig RANSAC, we obtain our objects and plane in the next shape:
-[!complete_clustering](./README_FILES/complete_cluster.png)
+
+<img src="./README_FILES/complete_cluster.png" width="700" height="400"/>
+
 After that, I implemented my own Kd tree algorithm for insertion and searching. And use that implmementation and constructed my own euclidan clustering algorithm to separate between datapoints. This is a result with 2D data.
 
-[!own_euclidean_cluster](./README_FILES/euclidean_cluster_manual.png)
+<img src="./README_FILES/euclidean_cluster_manual.png" width="700" height="400"/>
+
 For the last part, I implemented boudning boxes around the objects that exists in the plane. 
-[!objects](../SFND_Lidar_Obstacle_Detection/README_FILES/objects.png)
+
+<img src="./README_FILES/objects.png" width="700" height="400"/>
+
 After all of this, we now render real PCD data to work and apply the functions that were previously created. An initial view of the PCD can be seen below of a city block.
-[!cityBlock](./README_FILES/real_pcd.png)
+
+<img src="./README_FILES/real_pcd.png" width="700" height="400"/>
 
 For extra cleaning and easier processing, we also created a function to remove the points that the lidar was reading from the roof of the car. We also applied vox grid filtering to dowsample the points of our PCD for easier calculations and selected a region of interest to only focus on the impornat parts of the point cloud. After all this, we also used function to filter and extract the point cloud information of the roof. 
-[!filtering_pcd](./README_FILES/after_cleaning.png)
+
+<img src="./README_FILES/after_cleaning.png" width="700" height="400"/>
 
 The next steps where preparing image for obstacle detections: 
 
 1. Segment the filter cloud in two parts, the road and the obstacles. We used the previous segmentined algorhtms to segement the objects from the road. Furtheremo, we display the roof of the car in a box to show the region of the roof of the car that was removed from clusters. 
 
-[!step1](./README_FILES/step1.png)
+<img src="./README_FILES/step1.png" width="700" height="400"/>
 
 2. Step 2 of obstacle detection is clustiner the obstacle cloud. We cluster the objects based on the proximity of the neighbors using the previous fucniton created using euclidean clustering optimized by kd tree. Diferent thresholds and min/max values were used to find and fit the best separation between objects. 
 
-[!step2](./README_FILES/step2.png)
+<img src="./README_FILES/step2.png" width="700" height="400"/>
 
 3. Step 3 was applying bounding boxes around individual clusters. 
 
-[!step3](./README_FILES/step3.png)
+<img src="./README_FILES/step3.png" width="700" height="400"/>
 
 4. The final step we created a stream of multiple pcd data to streamline it as a streaming video and apply in each frame the detection algorithm for multiple objects.
-<video width="320" height="240" controls>
-  <source src="./README_FILES/detection.webm" type="video/webm">
-</video>
-<video width="320" height="240" controls>
-  <source src="./README_FILES/video2.webm" type="video/webm">
-</video>
+
+<img src="./README_FILES/detection.gif" width="700" height="400" />
+<img src="./README_FILES/video2.gif" width="700" height="400" />
 
 
 ### Sensor Fusion course for self-driving cars.
