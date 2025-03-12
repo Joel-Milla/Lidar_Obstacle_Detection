@@ -23,9 +23,7 @@ template<typename PointT>
 class ProcessPointClouds {
 public:
 
-    //constructor
     ProcessPointClouds();
-    //deconstructor
     ~ProcessPointClouds();
 
     void numPoints(typename pcl::PointCloud<PointT>::Ptr cloud);

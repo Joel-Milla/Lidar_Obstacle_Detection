@@ -93,7 +93,6 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::RemoveRoofPoin
 }
 
 /*
-
 Params:
 @cloud -> cloud to be filtered
 @filterRes -> value used for voxel grid method
@@ -246,13 +245,14 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
     // Time clustering process
     auto startTime = std::chrono::steady_clock::now();
 
+    //* PCL TREE AND CLUSTERING IMPLEMENTATION
     std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
 
     // Creating the KdTree object for the search method of the extraction
     typename pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
     tree->setInputCloud (cloud);
 
-    // Extracting all the different clusters and saving their indices of each cluster. 
+    // Extracting all the different clusters and saving their indices of each cluster. PointIndices is a vector of indices
     std::vector<pcl::PointIndices> cluster_indices;
     pcl::EuclideanClusterExtraction<PointT> ec;
     ec.setClusterTolerance(clusterTolerance); // value to low will create many clusters from one object, value to high multiple objects as one cluster.
@@ -261,6 +261,8 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
     ec.setSearchMethod(tree); // Search clusters using kdtree
     ec.setInputCloud(cloud);
     ec.extract(cluster_indices);
+
+    //* MY OWN IMPLEMENTATION OF TREE AND CLUSTERING ALGORITHMS
 
     // For each cluster, iterate through the indices and get the original points of the cloud
     for (const auto& cluster : cluster_indices) {

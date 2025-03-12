@@ -14,14 +14,17 @@ namespace KdTreeSpace {
 
 
     //* KdTree implementation
-    KdTree::KdTree() : root(NULL) {}
+    template <typename PointT>
+    KdTree<PointT>::KdTree() : root(NULL) {}
 
-    KdTree::~KdTree()
+    template <typename PointT>
+    KdTree<PointT>::~KdTree()
     {
         delete root;
     }
 
-    void KdTree::insert(Node *&node, std::vector<float> point, int id, int level) {
+    template <typename PointT>
+    void KdTree<PointT>::insert(Node *&node, PointT point, int id, int level) {
         float x = point[0];
         float y = point[1];
         bool compare_x = level % 2 == 0;
@@ -51,14 +54,20 @@ namespace KdTreeSpace {
         return;
     }
 
-    void KdTree::insert(std::vector<float> point, int id)
+    //* Function to insert a new point into the tree
+    template <typename PointT>
+    void KdTree<PointT>::insert(PointT point, int id)
     {
-        // TODO: Fill in this function to insert a new point into the tree
         // the function should create a new node and place correctly with in the root 
         insert(root, point, id, 0);
     }
 
-    void KdTree::traverse(Node* &node, std::vector<float> target, float distanceTol, std::vector<int> &ids, int level) {
+    template <typename PointT> void KdTree<PointT>::setInputCloud(typename pcl::PointCloud<PointT>::Ptr cloud) {
+
+    }
+
+    template <typename PointT> 
+    void KdTree<PointT>::traverse(Node* &node, PointT target, float distanceTol, std::vector<int> &ids, int level) {
         if (node == NULL) // return when is null, terminating decision of recursion
         return;
         
@@ -111,7 +120,8 @@ namespace KdTreeSpace {
     }
 		
     // return a list of point ids in the tree that are within distance of target
-    std::vector<int> KdTree::search(std::vector<float> target, float distanceTol)
+    template <typename PointT> 
+    PointT KdTree<PointT>::search(PointT, float distanceTol)
     {
         std::vector<int> ids;
         traverse(root, target, distanceTol, ids, 0);

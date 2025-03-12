@@ -3,9 +3,11 @@
 
 #ifndef KDTREE_H_
 #define KDTREE_H_
+
 #include <cmath>
 #include <vector>
 #include <stdlib.h>
+#include <pcl/point_cloud.h>
 
 namespace KdTreeSpace {
 	// Structure to represent node of kd tree
@@ -20,19 +22,21 @@ namespace KdTreeSpace {
 		~Node();
 	};
 
+	template <typename PointT>
 	class KdTree {
-	// private:
+	private:
+		void traverse(Node* &node, PointT target, float distanceTol, std::vector<int> &ids, int level);
+		void insert(Node *&node, PointT point, int id, int level);
+		void insert(PointT point, int id);
+
 	public:
 		Node* root;
 
 		KdTree();
 		~KdTree();
-		void traverse(Node* &node, std::vector<float> target, float distanceTol, std::vector<int> &ids, int level);
-		void insert(Node *&node, std::vector<float> point, int id, int level);
-
-		void insert(std::vector<float> point, int id);
 		
-		std::vector<int> search(std::vector<float> target, float distanceTol);
+		void setInputCloud(typename pcl::PointCloud<PointT>::Ptr cloud);
+		PointT search(PointT, float distanceTol);
 	};
 }
 
