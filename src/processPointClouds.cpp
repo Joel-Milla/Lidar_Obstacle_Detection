@@ -1,8 +1,15 @@
 // PCL lib Functions for processing point clouds 
 
 #include "processPointClouds.h"
-#include "./quiz/cluster/cluster.h"
-// #include "./helper/segment.h"
+#include "./helper/cluster.h"
+#include "./helper/kdtree.h"
+#include "./helper/segment.h"
+#include "./helper/segment.cpp"
+/*
+Why need to include the segment.cpp and how does this not throw an error because of multiple declaration of same cpp file? 
+
+When the compiler is making the .o files, if there is a class template, it needs to see the definition (and when is not template, it does not, the declaration is enough). But, the definition of the class and linking stage happens until later during linking stage, at that point this specific class has no way of knowing the definition that is happening in another file because the linking stage has not happened. So, you need to import the cpp file so the compiler is able to see the definition of the file during compilation stage. and the compiler and linker work together so the same template is not declared twice, so as to avoid compilation errors.
+*/
 
 
 //constructor:
@@ -19,69 +26,6 @@ template<typename PointT>
 void ProcessPointClouds<PointT>::numPoints(typename pcl::PointCloud<PointT>::Ptr cloud)
 {
     std::cout << cloud->points.size() << std::endl;
-}
-
-/*
-Function that modifies the parameter inliers by including in it the plane by making the ransac algorithm
-
-Params:
-@inliers -> indices where the plane found will be saved
-@cloud -> cloud to be filtered
-@maxIterations -> max iterations to be implemented during RANSAC
-@distanceTol -> distance tolerance between points
-
-Return:
-void
-
-Function:
-Implements RANSAC algorithm to divide the plane and the objects in a point cloud data by saving in inliers the indices that are part of the road/plane
-*/
-
-template<typename PointT>
-void ProcessPointClouds<PointT>::Ransac(pcl::PointIndices::Ptr inliers, typename pcl::PointCloud<PointT>::Ptr cloud, int maxIterations, float distanceTol) {
-    std::vector<int> inliersResult;
-	srand(time(NULL));
-	
-	// TODO: Fill in this function
-	// For max iterations 
-	for (int it = 0; it < maxIterations; it++) {
-		std::vector<int> inliersResultTemp;
-
-		// Randomly sample subset and fit line
-		long long int sizeCloud = cloud->points.size();
-		long long int index1 = rand() % sizeCloud;
-		long long int index2 = rand() % sizeCloud;
-		long long int index3 = rand() % sizeCloud;
-
-		PointT point1 = cloud->points[index1];
-		PointT point2 = cloud->points[index2];
-		PointT point3 = cloud->points[index3];
-
-		long long int A = ( (point2.y - point1.y)*(point3.z - point1.z) - (point2.z - point1.z) * (point3.y - point1.y));
-		long long int B = ( (point2.z - point1.z)*(point3.x - point1.x) - (point2.x - point1.x) * (point3.z - point1.z));
-		long long int C = ( (point2.x - point1.x)*(point3.y - point1.y) - (point2.y - point1.y) * (point3.x - point1.x));
-		long long int D = -1 * ((A * point1.x) + (B * point1.y) + (C * point1.z));
-
-		// Measure distance between every point and fitted line
-		for (int indx = 0; indx < cloud->points.size(); indx++) {
-			const PointT& point = cloud->points[indx];
-			float x = point.x;
-			float y = point.y;
-			float z = point.z;
-
-			double distance = abs( (A * x) + (B * y) + (C * z) + (D) ) / sqrt( (A * A) + (B * B) + (C * C));
-			// If distance is smaller than threshold count it as inlier
-			if (distance < distanceTol)
-				inliersResultTemp.push_back(indx);
-			
-			// If is maximum inliers that ever existed, save result
-			if (inliersResult.size() < inliersResultTemp.size())
-				inliersResult = inliersResultTemp;
-		}
-	}
-
-	// Save indices of the plane in inliers
-	inliers->indices = inliersResult;
 }
 
 /*
@@ -164,6 +108,7 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(ty
     sor.filter (*cloud_filtered);
 
     //* CROPBOX FOR SELECTING REGION OF INTEREST
+    // cropbox receives dimensions and returns the cloud points that reside inside that dimensions
     typename pcl::PointCloud<PointT>::Ptr cloud_cropbox (new pcl::PointCloud<PointT>());
     pcl::CropBox<PointT> cropBoxFilter (true);
     cropBoxFilter.setInputCloud (cloud_filtered);
@@ -212,12 +157,17 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
 }
 
 /* 
-Segmentation uses iterative approach, the more iterations the more confident, but also takes longer. Algirthm fits plane to a point and uses distanceTolerance to decide which points belong to the plane. 
+Segmentation uses iterative approach, the more iterations the more confident, but also takes longer. Algirthm fits plane to a point and uses distanceTolerance to decide which points belong to the plane.  
 
 Params
 @cloud : cloud to be segmented
 @max iterations: number of iterations
 @ditanceThreshold: determines how close a point must be to the model to be considered an inlier
+
+Return
+pair: 1. The clouds with all the point clouds that are part of the plane (road) the inliers 2. Return the complete cloud that was analyzed without segmentation 
+
+Function: The separte clouds returns a pair with the inliers (the points that are part of the plane) and the cloud that was analyzed (so the full point cloud without segmentation)
 */
 template<typename PointT>
 std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::SegmentPlane(typename pcl::PointCloud<PointT>::Ptr cloud, int maxIterations, float distanceThreshold)
@@ -225,12 +175,10 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
     // Time segmentation process
     auto startTime = std::chrono::steady_clock::now();
 
-    // TODO:: Fill in this function to find inliers for the cloud.
     // Create the segmentation object
 	pcl::PointIndices::Ptr inliers {new pcl::PointIndices}; // ptr to the inliers
     
     //* CODE USING PCL BUILTIN RANSAC
-    
     pcl::SACSegmentation<PointT> seg; 
     pcl::ModelCoefficients::Ptr coefficients {new pcl::ModelCoefficients}; // coefficients define what the plane is
     
@@ -244,10 +192,10 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
     seg.setInputCloud (cloud);
     seg.segment (*inliers, *coefficients); 
     
-    
 
     //* CODE USING MY OWN RANSAC ALGORITHM
-    //Ransac(inliers, cloud, maxIterations, distanceThreshold); // solwer than built-in function
+    // Segment<PointT> seg; 
+    // seg.Ransac(inliers, cloud, maxIterations, distanceThreshold); // slower than built-in function
 
     // manage possible errors
     if (inliers->indices.size () == 0) // didnt found any model that fits the data

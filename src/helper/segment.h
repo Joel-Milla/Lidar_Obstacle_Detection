@@ -9,10 +9,7 @@
 template<typename PointT>
 class Segment {
     public:
-    
-    //constructor
     Segment();
-    //deconstructor
     ~Segment();
     
     // Methods

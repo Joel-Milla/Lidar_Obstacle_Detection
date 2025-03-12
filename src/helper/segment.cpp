@@ -1,16 +1,11 @@
 #include "segment.h"
 
-
 template<typename PointT>
 Segment<PointT>::Segment() {}
 
 template<typename PointT>
 Segment<PointT>::~Segment() {}
 
-// I need to recieve inliers pointer address pointer
-// i need to recieve cloud to do the segment
-// i need the max number of iterations
-// i need the distanetolerance
 /*
 Function that modifies the parameter inliers by including in it the plane by making the ransac algorithm
 
@@ -21,12 +16,11 @@ Params:
 @distanceTol -> distance tolerance between points
 
 Return:
-void
+Nothing
 
 Function:
-Implements RANSAC algorithm to divide the plane and the objects in a point cloud data by saving in inliers the indices that are part of the road/plane
+Implements RANSAC algorithm to separate the plane and the objects from the cloud. Run maxIterations and inlcude as inliers the points that are within the distanceTol from the main plain. The inliers are the road.
 */
-
 template<typename PointT>
 void Segment<PointT>::Ransac(pcl::PointIndices::Ptr inliers, typename pcl::PointCloud<PointT>::Ptr cloud, int maxIterations, float distanceTol) {
     std::vector<int> inliersResult;
@@ -52,7 +46,7 @@ void Segment<PointT>::Ransac(pcl::PointIndices::Ptr inliers, typename pcl::Point
 		long long int C = ( (point2.x - point1.x)*(point3.y - point1.y) - (point2.y - point1.y) * (point3.x - point1.x));
 		long long int D = -1 * ((A * point1.x) + (B * point1.y) + (C * point1.z));
 
-		// Measure distance between every point and fitted line
+		// Measure distance between every point and fit line
 		for (int indx = 0; indx < cloud->points.size(); indx++) {
 			const PointT& point = cloud->points[indx];
 			float x = point.x;
