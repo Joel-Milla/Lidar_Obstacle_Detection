@@ -34,7 +34,10 @@ std::vector<Car> initHighway(bool renderScene, pcl::visualization::PCLVisualizer
     return cars;
 }
 
-
+/*
+Function:
+Receives a viewer which is where the graphs will be displayed. This function only shows a very simple model. 
+*/
 void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
 {
     // ----------------------------------------------------
@@ -45,25 +48,23 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
     bool renderScene = false; // A value of true shows the cars in the scene, with false it removes the cars and street from simulator
     std::vector<Car> cars = initHighway(renderScene, viewer);
     
-    // TODO:: Create lidar sensor 
+    //* Create lidar sensor 
     Lidar* lidar = new Lidar(cars, 0);
-    pcl::PointCloud<pcl::PointXYZ>::Ptr inputCloud = lidar->scan(); // This already returns a pointer, a smart pointer that manages memory deallocation, etc. 
-
-    // Render the rays
-    // renderRays(viewer, lidar->position, inputCloud);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr inputCloud = lidar->scan(); // This already returns a pointer, a smart pointer that manages memory deallocation, etc.
 
     // Render the point cloud
     Color color = Color(0.0,255.0,0.0);
     renderPointCloud(viewer, inputCloud, "Point Cloud", color);
 
-    // TODO:: Point processor that contains all the methods for filtering, segmentaion, clustering, etc. 
-
+    //* Point processor that contains all the methods for filtering, segmentaion, clustering, etc. 
     ProcessPointClouds<pcl::PointXYZ> pointProcessor;
     std::pair<pcl::PointCloud<pcl::PointXYZ>::Ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr> segmentCloud = pointProcessor.SegmentPlane(inputCloud, 100, 0.2);
+
+    //* Examples to render the point cloud of the object cloud and plane cloud at same time
     // renderPointCloud(viewer, segmentCloud.first, "objectCloud", Color(1,0,0));
     // renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,1,0));
     
-    // TODO: Clustering process that clusters the different objects within the PCD
+    //* Clustering process that clusters the different objects within the PCD
     // Pass to function Clustering all the points that are not part of the road/plane of the car
     std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> cloudClusters = pointProcessor.Clustering(segmentCloud.first, 1, 20, 500);
 	
@@ -82,28 +83,28 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
     }
 }
 
+/*
+Function:
+In charge of rendering the complete city block, which is a more advance environment than previous function
+*/
 void cityBlock(ProcessPointClouds<pcl::PointXYZI>* pointProcessorI, pcl::visualization::PCLVisualizer::Ptr& viewer, const pcl::PointCloud<pcl::PointXYZI>::Ptr& inputCloud) {
     // Obtain roof points' cloud, and its indices
     std::pair<typename pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointIndices::Ptr> roof = pointProcessorI->ObtainRoofPoints(inputCloud);
 
     // Apply filter cloud to downsample the amount of data in PCD for faster data management by applying voxel grid, then use cropbox to reduce field of view just near the car, after that remove roof points.s
     typename pcl::PointCloud<pcl::PointXYZI>::Ptr filterCloud = pointProcessorI->FilterCloud(inputCloud, 0.15 , Eigen::Vector4f (-10, -10, -10, 1), Eigen::Vector4f ( 26, 10, 10, 1));
-    // renderPointCloud(viewer,filterCloud,"filterCloud", Color(0,1,0)); // render the filtered cloud?
     
     //* STEP1: SEGMENT PLANE VS OBJECTS VS ROOF
     std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segmentCloud = pointProcessorI->SegmentPlane(filterCloud, 100, 0.2);
-    // renderPointCloud(viewer, segmentCloud.first, "objectCloud", Color(1,0,0));
-    // renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,1,0));
 
-    Box roofBox = pointProcessorI->BoundingBox(roof.first);
-    // renderBox(viewer, roofBox, '-', Color(1,0,1));
 
     //* STEP2: CLUSTER OBSTACLE CLOUD
     std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters = pointProcessorI->Clustering(segmentCloud.first, 0.55, 30, 600);
 
     std::vector<Color> colors = {Color(1,0,0), Color(1,1,0), Color(0,0,1), Color(1,1,1)};
-    renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,1,0));
+    renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,1,0)); // render plane cloud
     
+    //* STEP3. RENDER BOUNDING BOXES AROUND OBJECTS
     for (int indx = 0; indx < cloudClusters.size(); indx++)
     {
         const pcl::PointCloud<pcl::PointXYZI>::Ptr& cluster = cloudClusters[indx];

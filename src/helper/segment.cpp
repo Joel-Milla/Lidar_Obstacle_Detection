@@ -7,8 +7,6 @@ template<typename PointT>
 Segment<PointT>::~Segment() {}
 
 /*
-Function that modifies the parameter inliers by including in it the plane by making the ransac algorithm
-
 Params:
 @inliers -> indices where the plane found will be saved
 @cloud -> cloud to be filtered
@@ -19,7 +17,7 @@ Return:
 Nothing
 
 Function:
-Implements RANSAC algorithm to separate the plane and the objects from the cloud. Run maxIterations and inlcude as inliers the points that are within the distanceTol from the main plain. The inliers are the road.
+Implements RANSAC algorithm to separate the plane and the objects from the cloud. Run maxIterations and inlcude as inliers the points that are within the distanceTol from the main plain. The inliers are the road. Also, segmentation uses iterative approach, the more iterations the more confident, but also takes longer. Algirthm fits plane to a point and uses distanceTolerance to decide which points belong to the plane.  
 */
 template<typename PointT>
 void Segment<PointT>::Ransac(pcl::PointIndices::Ptr inliers, typename pcl::PointCloud<PointT>::Ptr cloud, int maxIterations, float distanceTol) {

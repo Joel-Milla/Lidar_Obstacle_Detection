@@ -29,12 +29,13 @@ void ProcessPointClouds<PointT>::numPoints(typename pcl::PointCloud<PointT>::Ptr
 }
 
 /*
-Function that returns both the indices and the cluster of the rooftop
 Params:
 @cloud -> cloud to be filtered that has all the points
 
 Returns
 @filtered_cloud -> pair with the cloud of points of rooftop and also its indices
+
+Function that returns both the indices and the cloud cluster of the rooftop
 */
 template<typename PointT>
 std::pair<typename pcl::PointCloud<PointT>::Ptr, pcl::PointIndices::Ptr> ProcessPointClouds<PointT>::ObtainRoofPoints (typename pcl::PointCloud<PointT>::Ptr cloud) {
@@ -64,12 +65,13 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, pcl::PointIndices::Ptr> Process
 }
 
 /*
-Function to remove the points that collide and are retrieve by the lidar from the car roof
 Params
 @cloud -> cloud to be filtered that has all the points
 
 Returns
 @filtered_cloud -> cloud without rooftop points
+
+Function to remove the lidar points that collide with the rooftop. And return the new cloud
 */
 template<typename PointT>
 typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::RemoveRoofPoints (typename pcl::PointCloud<PointT>::Ptr cloud) {
@@ -90,6 +92,19 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::RemoveRoofPoin
     return cloud_filtered;
 }
 
+/*
+
+Params:
+@cloud -> cloud to be filtered
+@filterRes -> value used for voxel grid method
+@minPoint -> lower limit to define the region of interest, the cropbox
+@maxPoint -> upper limit to define the region of interest, the cropbox
+
+Returns:
+@cloud_wihtout_rooftop -> cloud after applying a voxel grid, selection cropbox (region of interest) and deleting the rooftop points.
+
+Function: This function receives a cloud and applies voxel grid to reduce the density of the points (downsample the data) and then applies cropbox to only select a region of interest (meaning that instead of having points of the area of 300 meters surrounding the lidar, now just around 50 meters). It also removes the points that collide with rooftop
+*/
 template<typename PointT>
 typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(typename pcl::PointCloud<PointT>::Ptr cloud, float filterRes, Eigen::Vector4f minPoint, Eigen::Vector4f maxPoint)
 {
@@ -97,9 +112,7 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(ty
     // Time segmentation process
     auto startTime = std::chrono::steady_clock::now();
 
-    
-    // TODO:: Fill in the function to do voxel grid point reduction and region based filtering
-    //* DOWNSAMPLE THE DATA
+    //* DOWNSAMPLE THE DATA (VOXEL GRID)
     // Create the filtering object 
     typename pcl::PointCloud<PointT>::Ptr cloud_filtered (new pcl::PointCloud<PointT> ());
     pcl::VoxelGrid<PointT> sor;
@@ -120,11 +133,12 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(ty
     // Cloud after cropbox
     cropBoxFilter.filter (*cloud_cropbox);
 
+    //* REMOVE ROOF POINTS
+    typename pcl::PointCloud<PointT>::Ptr cloud_without_roofPoints = RemoveRoofPoints(cloud_cropbox);
+
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     std::cout << "filtering took " << elapsedTime.count() << " milliseconds" << std::endl;
-
-    typename pcl::PointCloud<PointT>::Ptr cloud_without_roofPoints = RemoveRoofPoints(cloud_cropbox);
 
     return cloud_without_roofPoints;
 
@@ -132,15 +146,18 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(ty
 
 
 /*
-What this code does is separate point clouds. The plane would be the road, and the inliers are the points that form part of the plane/road. So by extracing the points taht are not inliers (not part of road), you obtain the objects which are the cars. 
+Params:
+@inliers -> Indices of the points that are part of the plane
+@cloud -> The complete cloud that includes the objects and the road
 
-Function: creates two point clouds, the obstacles and road. Road points same as inliers (that belong to plane/road). Use extract to obtain the obstacles. 
+Return:
+segResults -> pair of clouds: 1. Cloud ptr to the objects 2. Cloud ptr to the road
+
+Function: What this code does is separate point clouds. The plane would be the road, and the inliers are the points that form part of the plane/road. So by extracing the points taht are not inliers (not part of road), you obtain the obstacles. 
 */
 template<typename PointT>
 std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::SeparateClouds(pcl::PointIndices::Ptr inliers, typename pcl::PointCloud<PointT>::Ptr cloud) 
 {
-    // TODO: Create two new point clouds, one cloud with obstacles and other with segmented plane
-
     pcl::ExtractIndices<PointT> extract; // create object that make extractions
     extract.setInputCloud (cloud);    
 
@@ -157,8 +174,6 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
 }
 
 /* 
-Segmentation uses iterative approach, the more iterations the more confident, but also takes longer. Algirthm fits plane to a point and uses distanceTolerance to decide which points belong to the plane.  
-
 Params
 @cloud : cloud to be segmented
 @max iterations: number of iterations
@@ -212,7 +227,18 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
     return segResult;
 }
 
+/*
+Params:
+cloud -> the original cloud that contains all the objects without separation
+clusterTolerance -> Refers to the minimum distance between points to be consider part of same cluster. value to low will create many clusters from one object, value to high multiple objects as one cluster.
+minsize, maxSize -> minimum and maximum amount of points for something to be a cluster.
 
+Returns:
+Returns a vector of cloud points where each cloud refers to a single object of the original point cloud
+
+Function:
+This function is in charge of traversing the cloud of objects and separating each object. 
+*/
 template<typename PointT>
 std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::Clustering(typename pcl::PointCloud<PointT>::Ptr cloud, float clusterTolerance, int minSize, int maxSize)
 {
@@ -222,7 +248,6 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
 
     std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
 
-    // TODO:: Fill in the function to perform euclidean clustering to group detected obstacles
     // Creating the KdTree object for the search method of the extraction
     typename pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
     tree->setInputCloud (cloud);
@@ -237,7 +262,7 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
     ec.setInputCloud(cloud);
     ec.extract(cluster_indices);
 
-    // For each cluster, iterate through the indices and get the original point
+    // For each cluster, iterate through the indices and get the original points of the cloud
     for (const auto& cluster : cluster_indices) {
         typename pcl::PointCloud<PointT>::Ptr cloud_cluster { new pcl::PointCloud<PointT> };
 
