@@ -121,7 +121,7 @@ namespace KdTreeSpace {
 		
     // return a list of point ids in the tree that are within distance of target
     template <typename PointT> 
-    PointT KdTree<PointT>::search(PointT, float distanceTol)
+    PointT KdTree<PointT>::search(PointT target, float distanceTol)
     {
         std::vector<int> ids;
         traverse(root, target, distanceTol, ids, 0);

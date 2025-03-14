@@ -7,12 +7,14 @@
 
 namespace Cluster {
 
+    template <typename PointT>
     void helperProximty(int indx, std::vector<int>& cluster, 
         std::unordered_set<int>& pointsProcessed, 
-        KdTreeSpace::KdTree* tree, float distanceTol, 
+        KdTreeSpace::KdTree<PointT>* tree, float distanceTol, 
         const std::vector<std::vector<float>>& points);
         
-    std::vector<std::vector<int>> euclideanCluster(const std::vector<std::vector<float>>& points, KdTreeSpace::KdTree* tree, float distanceTol);
+    template <typename PointT>
+    std::vector<std::vector<int>> euclideanCluster(const std::vector<std::vector<float>>& points, KdTreeSpace::KdTree<PointT>* tree, float distanceTol);
 }
 
 #endif

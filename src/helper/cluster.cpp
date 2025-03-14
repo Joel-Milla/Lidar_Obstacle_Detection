@@ -3,7 +3,8 @@
 #include "cluster.h"
 
 // Helper function receives the target point, and saves all the nearby points of the target into the cluster
-void Cluster::helperProximty(int indx, std::vector<int>& cluster, std::unordered_set<int>& pointsProcessed, KdTreeSpace::KdTree* tree, float distanceTol, const std::vector<std::vector<float>>& points) {
+template <typename PointT>
+void Cluster::helperProximty(int indx, std::vector<int>& cluster, std::unordered_set<int>& pointsProcessed, KdTreeSpace::KdTree<PointT>* tree, float distanceTol, const std::vector<std::vector<float>>& points) {
 
 	pointsProcessed.insert(indx); // mark the point received as processed
 	cluster.push_back(indx); // save the current point into the cluster
@@ -23,7 +24,8 @@ void Cluster::helperProximty(int indx, std::vector<int>& cluster, std::unordered
 	}
 }
 
-std::vector<std::vector<int>> Cluster::euclideanCluster(const std::vector<std::vector<float>>& points, KdTreeSpace::KdTree* tree, float distanceTol)
+template <typename PointT>
+std::vector<std::vector<int>> Cluster::euclideanCluster(const std::vector<std::vector<float>>& points, KdTreeSpace::KdTree<PointT>* tree, float distanceTol)
 {
 
 	// TODO: Fill out this function to return list of indices for each cluster

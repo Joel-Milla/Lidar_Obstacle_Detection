@@ -8,6 +8,8 @@
 #include <vector>
 #include <stdlib.h>
 #include <pcl/point_cloud.h>
+// to check traits of PointT below
+#include "type_traits.h" 
 
 namespace KdTreeSpace {
 	// Structure to represent node of kd tree
@@ -28,15 +30,20 @@ namespace KdTreeSpace {
 		void traverse(Node* &node, PointT target, float distanceTol, std::vector<int> &ids, int level);
 		void insert(Node *&node, PointT point, int id, int level);
 		void insert(PointT point, int id);
+		Node* root;
+
+		// static constexpr bool hasXYZ = pcl::traits::has_xyz<PointT>();
+		// static constexpr bool hasXY = pcl::traits::has_xy<PointT>();
+
+		static constexpr int dimensions = traits::getDimensions<PointT>();
 
 	public:
-		Node* root;
 
 		KdTree();
 		~KdTree();
 		
 		void setInputCloud(typename pcl::PointCloud<PointT>::Ptr cloud);
-		PointT search(PointT, float distanceTol);
+		PointT search(PointT target, float distanceTol);
 	};
 }
 
