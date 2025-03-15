@@ -1,10 +1,10 @@
 // PCL lib Functions for processing point clouds 
 
 #include "processPointClouds.h"
-#include "./helper/cluster.h"
-#include "./helper/kdtree.h"
-#include "./helper/segment.h"
+// #include "./helper/segment.h"
 #include "./helper/segment.cpp"
+#include "./helper/cluster.h"   
+#include "./helper/cluster.cpp"
 /*
 Why need to include the segment.cpp and how does this not throw an error because of multiple declaration of same cpp file? 
 
@@ -253,19 +253,21 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
     tree->setInputCloud (cloud);
 
     // Extracting all the different clusters and saving their indices of each cluster. PointIndices is a vector of indices
-    std::vector<pcl::PointIndices> cluster_indices;
+    std::vector<pcl::PointIndices> clusters_indices;
     pcl::EuclideanClusterExtraction<PointT> ec;
     ec.setClusterTolerance(clusterTolerance); // value to low will create many clusters from one object, value to high multiple objects as one cluster.
     ec.setMinClusterSize(minSize);
     ec.setMaxClusterSize(maxSize);
     ec.setSearchMethod(tree); // Search clusters using kdtree
     ec.setInputCloud(cloud);
-    ec.extract(cluster_indices);
+    ec.extract(clusters_indices);
 
     //* MY OWN IMPLEMENTATION OF TREE AND CLUSTERING ALGORITHMS
+    EuclideanCluster<PointT> clustering;
+    clustering.setInputCloud(cloud);
 
     // For each cluster, iterate through the indices and get the original points of the cloud
-    for (const auto& cluster : cluster_indices) {
+    for (const auto& cluster : clusters_indices) {
         typename pcl::PointCloud<PointT>::Ptr cloud_cluster { new pcl::PointCloud<PointT> };
 
         // Iterate each index of cluster and save it in the cluster
