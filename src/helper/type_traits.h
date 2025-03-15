@@ -1,6 +1,7 @@
 #ifndef TYPE_TRAITS_H_
 #define TYPE_TRAITS_H_
 
+#include <type_traits>
 namespace traits {
     template <typename...> // can accept many typenames
     using void_t = void;
@@ -49,7 +50,7 @@ namespace traits {
     struct HasZ : std::false_type {}; 
 
     template <typename PointT>
-    struct HasY<PointT, void_t<decltype(std::declval<PointT>().z)>> : std::true_type {};
+    struct HasZ<PointT, void_t<decltype(std::declval<PointT>().z)>> : std::true_type {};
 
     template <typename PointT>
     constexpr int getDimensions() {
