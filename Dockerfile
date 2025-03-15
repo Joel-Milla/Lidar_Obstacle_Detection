@@ -1,4 +1,7 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.04
+
+# non interactive flag to avoid getting stuck
+ENV DEBIAN_FRONTEND=noninteractive 
 
 # Make SSH configuration
 RUN apt-get update && apt-get install -y \
@@ -22,23 +25,22 @@ RUN echo "Port 22" >> /etc/ssh/sshd_config && \
 # Set a known password: "password"
 RUN echo "root:password" | chpasswd
 
-EXPOSE 22
 
 # Install dependencies
-RUN apt-get update && apt-get install -y \
+RUN  apt-get update && apt-get install -y \
     build-essential \
     cmake \
-    g++-5 \
-    gcc-5 \
-    libpcl-dev=1.7.2-* \
-    && rm -rf /var/lib/apt/lists/*
+    g++ \
+    gcc 
 
-# Set GCC 5 as default
-RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100 \
-    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 100
+RUN apt-get update && apt-get install -y \
+    libpcl-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
+
+EXPOSE 22
 
 # Copy project files into container
 # COPY . /app
