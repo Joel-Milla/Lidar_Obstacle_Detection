@@ -16,4 +16,6 @@ class Segment {
     void Ransac(pcl::PointIndices::Ptr inliers,  typename pcl::PointCloud<PointT>::Ptr cloud, int maxIterations, float distanceTol);
     
 };
+
+
 #endif /* SEGMENT_H_ */

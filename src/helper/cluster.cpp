@@ -1,7 +1,6 @@
 /* \author Joel Milla */
 
 #include "cluster.h"
-#include "kdtree.h"
 #include "pcl/PointIndices.h"
 #include <queue>
 #include <unordered_set>
@@ -22,6 +21,13 @@ Uses the instance of tree to populate the tree
 */
 template<typename PointT>
 void EuclideanCluster<PointT>::setInputCloud(typename pcl::PointCloud<PointT>::Ptr input_cloud, float distance_tol) {
+	if (!input_cloud || input_cloud->points.empty()) {
+        throw std::invalid_argument("Input cloud is null or empty");
+    }
+    if (distance_tol <= 0) {
+        throw std::invalid_argument("Distance tolerance must be positive");
+    }
+
 	this->input_cloud = input_cloud;
 	tree.setTree(input_cloud);
 	tree.setDistanceTol(distance_tol);
@@ -40,7 +46,7 @@ Function:
 Recieves a reference cluster, and the function adds to that cluster all the nearby points. 
 */
 template <typename PointT>
-void EuclideanCluster<PointT>::proximity(pcl::PointIndices &cluster, std::unordered_set<int>& points_processed, int point_indx) {
+void EuclideanCluster<PointT>::proximity(pcl::PointIndices &cluster, std::unordered_set<int>& points_processed, int point_indx) const {
 	std::queue<int> queue;
 
 	queue.push(point_indx);
@@ -75,7 +81,7 @@ Function:
 Receiving cluster_indicies, the function will traverse all the points and divide the points in different clusters (which are vector of indices)
 */
 template <typename PointT>
-void EuclideanCluster<PointT>::euclideanCluster(std::vector<pcl::PointIndices> &cluster_indices) {
+void EuclideanCluster<PointT>::euclideanCluster(std::vector<pcl::PointIndices> &cluster_indices) const {
 
 	const auto &points = input_cloud->points;
 	std::unordered_set<int> points_processed;

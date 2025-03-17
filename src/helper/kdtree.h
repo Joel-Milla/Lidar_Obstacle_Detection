@@ -23,15 +23,16 @@ namespace KdTreeSpace {
 
 		Node(); // Another constructor so can set an empty node when initializing vectors and not throw an error -> std::vector<Node<PointT>> nodes();
 		Node(PointT point, int indx);
+		~Node();
 	};
 
 	template <typename PointT>
 	class KdTree {
 	private:
 		//* Main functions used in public methods
-		void traverse(Node<PointT>* &node, PointT target, std::vector<int> &ids, int level);
-		void insert(PointT point, int id);
+		void insert(PointT point, int indx);
 		void setTree(const std::vector<Node<PointT>>& cloud);
+		void deleteTree(Node<PointT>* node);
 		
 		//* To know if in xyz plane or only xy
 		Node<PointT>* root;
@@ -39,9 +40,9 @@ namespace KdTreeSpace {
 		float distance_tol;
 
 		//* Helper functions
-		bool firstPointGreater(PointT p1, PointT p2, int depth);
+		bool firstPointGreater(PointT first_point, PointT second_point, int depth);
 		bool firstPointWithinRangeSecond(const PointT& point, const PointT& reference_point) const;
-		bool withinDistance(PointT point, PointT reference_point);
+		bool withinDistance(const PointT& point, const PointT& reference_point) const;
 
 	public:
 
@@ -49,9 +50,10 @@ namespace KdTreeSpace {
 		~KdTree();
 		
 		void setTree(typename pcl::PointCloud<PointT>::Ptr cloud);
-		std::vector<int> search(PointT target);
+		std::vector<int> search(const PointT& target) const;
 		void setDistanceTol(float distance_tol);
 	};
 }
+
 
 #endif

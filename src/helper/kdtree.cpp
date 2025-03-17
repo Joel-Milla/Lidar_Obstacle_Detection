@@ -1,3 +1,4 @@
+
 #include "kdtree.h"
 #include "pcl/point_cloud.h"
 #include <algorithm>
@@ -15,12 +16,27 @@ namespace KdTreeSpace {
     Node<PointT>::Node(): point(), indx(0), left(nullptr), right(nullptr) {
     }
 
+    template <typename PointT>
+    Node<PointT>::~Node() {}
+
     //* KdTree Implementation
     template <typename PointT>
     KdTree<PointT>::KdTree() : root(NULL) {}
 
     template <typename PointT>
-    KdTree<PointT>::~KdTree() {}
+    KdTree<PointT>::~KdTree() {
+        deleteTree(root);
+    }
+
+    template <typename PointT>
+    void KdTree<PointT>::deleteTree(Node<PointT>* node) {
+        if (node == nullptr) return;
+        
+        deleteTree(node->left);
+        deleteTree(node->right);
+        
+        delete node;
+    }
 
 
     /*
@@ -34,16 +50,16 @@ namespace KdTreeSpace {
     Receives two points, p1 and p2. Checks which depth of tree are, and then check based on the number of dimensions (xyz or xy) which variable neds to be compared with
     */
     template <typename PointT>
-    bool KdTree<PointT>::firstPointGreater(PointT p1, PointT p2, int depth) {
+    bool KdTree<PointT>::firstPointGreater(PointT first_point, PointT second_point, int depth) {
         int axis_to_compare = depth % dimensions;
 
         switch (axis_to_compare) {
         case 0:
-            return p1.x > p2.x;
+            return first_point.x > second_point.x;
         case 1:
-            return p1.y > p2.y;
+            return first_point.y > second_point.y;
         case 2:
-            return p1.z > p2.z;
+            return first_point.z > second_point.z;
         default:
             return false;
         }     
@@ -109,7 +125,7 @@ namespace KdTreeSpace {
             points_to_be_proccessed.pop();
 
             //* This lambda function is a helper sort function to consider different axis (xyz)
-            auto sort_by_axis = [&axis] (Node<PointT> p1, Node<PointT> p2) {
+            auto sort_by_axis = [axis] (Node<PointT> p1, Node<PointT> p2) {
             switch (axis)
             {
             case 0:
@@ -224,31 +240,31 @@ namespace KdTreeSpace {
 
     /*
     Inputs
-    @p1, p2 => Node points that we want to know if are withing a distance. 
+    @1, p2 => Node points that we want to know if are withing a distance. 
 
     Returns:
     true/false => if the two points are within distance_tol (variable of the class)
     */
     template <typename PointT>
-    bool KdTree<PointT>::withinDistance(PointT p1, PointT p2) {
+    bool KdTree<PointT>::withinDistance(const PointT& target_point, const PointT& source_point) const {
         float distance = 0.0;
-        //* Depending on the dimension, the sqrt changes
+        //* Depending on the dimension, the distance function changes
         switch (dimensions) {
         case 3:
-            distance = sqrt( 
-                pow((p1.x - p2.x), 2) + 
-                pow((p1.y - p2.y), 2) +
-                pow((p1.z - p2.z), 2));
-            return distance <= distance_tol;
+            distance = ( 
+                pow((target_point.x - source_point.x), 2) + 
+                pow((target_point.y - source_point.y), 2) +
+                pow((target_point.z - source_point.z), 2));
+            return distance <= pow(distance_tol, 2);
         case 2:
-            distance = sqrt( 
-                pow((p1.x - p2.x), 2) + 
-                pow((p1.y - p2.y), 2));
-            return distance <= distance_tol;
+            distance = ( 
+                pow((target_point.x - source_point.x), 2) + 
+                pow((target_point.y - source_point.y), 2));
+            return distance <= pow(distance_tol, 2);
         case 1:
-            distance = sqrt( 
-                pow((p1.x - p2.x), 2));
-            return distance <= distance_tol;
+            distance = ( 
+                pow((target_point.x - source_point.x), 2));
+            return distance <= pow(distance_tol, 2);
         default:
             return false;
         }
@@ -265,20 +281,20 @@ namespace KdTreeSpace {
     This function receives a point to find nearest points within a distance tolerance. It obtains the nearest points and then returns their original indices of the point cloud
     */ 
     template <typename PointT> 
-    std::vector<int> KdTree<PointT>::search(PointT target)
-    {
+    std::vector<int> KdTree<PointT>::search(const PointT& target) const {
+        if (root == nullptr) return {};
         std::vector<int> indices;
         
-        std::queue<std::pair<Node<PointT>, int>> queue;
-        queue.push({*root, 0});
+        std::queue<std::pair<Node<PointT>*, int>> queue;
+        queue.push({root, 0});
 
         //* Use a queue to traverse the entire tree
         while (!queue.empty()) {
-            Node<PointT> curr_point = queue.front().first;
+            Node<PointT>* curr_point = queue.front().first;
             int level = queue.front().second;
             queue.pop();
 
-            bool within_range = firstPointWithinRangeSecond(curr_point.point, target);
+            bool within_range = firstPointWithinRangeSecond(curr_point->point, target);
 
             //* Depending on the dimensions that the point has, calculate if we need to go left/right
             bool traverse_left = false;
@@ -286,30 +302,30 @@ namespace KdTreeSpace {
             int target_axis = level % dimensions;
             switch (target_axis) {
             case 0:
-                traverse_left = (target.x - distance_tol) < curr_point.point.x;
-                traverse_right = (target.x + distance_tol) > curr_point.point.x;
+                traverse_left = (target.x - distance_tol) < curr_point->point.x;
+                traverse_right = (target.x + distance_tol) > curr_point->point.x;
                 break;
             case 1: 
-                traverse_left = (target.y - distance_tol) < curr_point.point.y;
-                traverse_right = (target.y + distance_tol) > curr_point.point.y;
+                traverse_left = (target.y - distance_tol) < curr_point->point.y;
+                traverse_right = (target.y + distance_tol) > curr_point->point.y;
                 break;
             case 2:
-                traverse_left = (target.z - distance_tol) < curr_point.point.z;
-                traverse_right = (target.z + distance_tol) > curr_point.point.z;
+                traverse_left = (target.z - distance_tol) < curr_point->point.z;
+                traverse_right = (target.z + distance_tol) > curr_point->point.z;
                 break;
             }
 
             if (within_range) {
-                if (withinDistance(target, curr_point.point))
-                    indices.push_back(curr_point.indx);
+                if (withinDistance(target, curr_point->point))
+                    indices.push_back(curr_point->indx);
             }
 
             //* If we need to traverse the left/right side of the tree, then that node will be added to the queue
-            if (traverse_left && curr_point.left != nullptr)
-                queue.push({*(curr_point.left), level + 1});
+            if (traverse_left && curr_point->left != nullptr)
+                queue.push({curr_point->left, level + 1});
         
-            if (traverse_right && curr_point.right != nullptr)
-                queue.push({*(curr_point.right), level + 1});
+            if (traverse_right && curr_point->right != nullptr)
+                queue.push({curr_point->right, level + 1});
 
         }
 
