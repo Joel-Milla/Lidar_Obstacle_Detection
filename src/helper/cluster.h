@@ -10,15 +10,16 @@
 template <typename PointT>
 class EuclideanCluster {
 private:
-    void proximity(int indx, std::vector<int>& cluster,  std::unordered_set<int>& pointsProcessed, KdTreeSpace::KdTree<PointT>* tree, float distanceTol, const std::vector<std::vector<float>>& points);
+    void proximity(pcl::PointIndices &cluster, std::unordered_set<int> points_processed, int point_indx);
         
     KdTreeSpace::KdTree<PointT> tree;
+    typename pcl::PointCloud<PointT>::Ptr input_cloud;
 public:
     EuclideanCluster();
     ~EuclideanCluster();
-    void setInputCloud(typename pcl::PointCloud<PointT>::Ptr input_cloud);
+    void setInputCloud(typename pcl::PointCloud<PointT>::Ptr input_cloud, float distance_tol);
 
-    pcl::PointIndices euclideanCluster(const std::vector<std::vector<float>>& points, KdTreeSpace::KdTree<PointT>* tree, float distanceTol);
+    void euclideanCluster(std::vector<pcl::PointIndices> &cluster_indices);
 };
 
 #endif

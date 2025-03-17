@@ -189,7 +189,6 @@ namespace KdTreeSpace {
     Input: 
     @point => this is the point that we want to know if is within range of reference point given a distance tolerance
     @reference_point => our reference point which defines our surrounding permitted area
-    @distance_tol => distance for a point to be within valid surroundings
 
     Return:
     true/false => return true or false if is within range
@@ -198,7 +197,7 @@ namespace KdTreeSpace {
     This function receives a point and a reference point, and tells if the point is within distance_tol of the reference point
     */
     template <typename PointT>
-    bool KdTree<PointT>::firstPointWithinRangeSecond(const Node<PointT>& point, const Node<PointT>& reference_point, int distance_tol) const {
+    bool KdTree<PointT>::firstPointWithinRangeSecond(const Node<PointT>& point, const Node<PointT>& reference_point) const {
         PointT curr_point = point.point;
         PointT ref_point = reference_point.point;
 
@@ -237,7 +236,7 @@ namespace KdTreeSpace {
     true/false => if the two points are within distance_tol
     */
     template <typename PointT>
-    bool KdTree<PointT>::withinDistance(Node<PointT> p1, Node<PointT> p2, int distance_tol) {
+    bool KdTree<PointT>::withinDistance(Node<PointT> p1, Node<PointT> p2) {
         float distance = 0.0;
         //* Depending on the dimension, the sqrt changes
         switch (dimensions) {
@@ -264,7 +263,6 @@ namespace KdTreeSpace {
     /*
     Input:
     @target => Point which we want to find all the nearest points
-    @distanceTol => distance tolerance (the maximum distance) for a near point to be consider 'close'
     
     Returns:
     @indices => returns a vector of indices
@@ -273,7 +271,7 @@ namespace KdTreeSpace {
     This function receives a point to find nearest points within a distance tolerance. It obtains the nearest points and then returns their original indices of the point cloud
     */ 
     template <typename PointT> 
-    std::vector<int> KdTree<PointT>::search(PointT target, float distance_tol)
+    std::vector<int> KdTree<PointT>::search(PointT target)
     {
         std::vector<int> indices;
         
@@ -321,4 +319,11 @@ namespace KdTreeSpace {
         return indices;
     }
 		
+    /*
+    Function that sets the entire distance tolerance of the tree
+    */
+    template <typename PointT>
+    void KdTree<PointT>::setDistanceTol(float distance_tol) {
+        this->distance_tol = abs(distance_tol);
+    }
 }

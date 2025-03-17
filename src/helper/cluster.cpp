@@ -3,6 +3,8 @@
 #include "cluster.h"
 #include "kdtree.h"
 #include "pcl/PointIndices.h"
+#include <queue>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -12,56 +14,81 @@ EuclideanCluster<PointT>::EuclideanCluster() {}
 template <typename PointT>
 EuclideanCluster<PointT>::~EuclideanCluster() {}
 
-// Helper function receives the target point, and saves all the nearby points of the target into the cluster
+/*
+Input:
+@input_cloud => pointer to the orignial point cloud data
+
+Function:
+Uses the instance of tree to populate the tree
+*/
+template<typename PointT>
+void EuclideanCluster<PointT>::setInputCloud(typename pcl::PointCloud<PointT>::Ptr input_cloud, float distance_tol) {
+	this->input_cloud = input_cloud;
+	tree.setTree(input_cloud);
+	tree.setDistanceTol(distance_tol);
+}
+
+/*
+Input:
+@cluster => cluster where the indices will be added
+@points_processed => set that will keep track of the points that have been added to the cluster
+@point_indx => initial point indx that we want to obtain nearby points
+
+Return:
+void
+
+Function:
+Recieves a reference cluster, and the function adds to that cluster all the nearby points. 
+*/
 template <typename PointT>
-void EuclideanCluster<PointT>::proximity(int indx, std::vector<int>& cluster, std::unordered_set<int>& pointsProcessed, KdTreeSpace::KdTree<PointT>* tree, float distanceTol, const std::vector<std::vector<float>>& points) {
+void EuclideanCluster<PointT>::proximity(pcl::PointIndices &cluster, std::unordered_set<int> points_processed, int point_indx) {
+	std::queue<int> queue;
 
-	pointsProcessed.insert(indx); // mark the point received as processed
-	cluster.push_back(indx); // save the current point into the cluster
+	queue.push(point_indx);
+	points_processed.insert(point_indx);
 
-	// Find nearby points of the target
-	std::vector<int> nearbyPoints = tree->search(points[indx], distanceTol);
+	//* Iterate over all the nearby points
+	while (!queue.empty()) {
+		int curr_point_indx = queue.front();
+		queue.pop();
+		cluster.indices.push_back(curr_point_indx);
 
-	// Traverse the indices of the closest points
-	for (int newTargetIndx : nearbyPoints) {
+		PointT curr_point = input_cloud->points[curr_point_indx];
+		std::vector<int> nearby_points = tree.search(curr_point);
 
-		bool pointProcessed = pointsProcessed.find(newTargetIndx) != pointsProcessed.end();
+		//* We iterate over the nearby points, add them to the queue to be processed, and insert them into the processed set in order to not be added twice
+		for (const int& point : nearby_points) {
+			bool point_processed = points_processed.find(point) != points_processed.end();
+			if (point_processed)
+				continue;
 
-		if (pointProcessed)
-			continue;
-
-		helperProximty(newTargetIndx, cluster, pointsProcessed, tree, distanceTol, points);
+			queue.push(point);
+			points_processed.insert(point);
+		}
 	}
 }
 
-template<typename PointT>
-void EuclideanCluster<PointT>::setInputCloud(typename pcl::PointCloud<PointT>::Ptr input_cloud) {
-	// tree = KdTreeSpace::KdTree<PointT>();
-	tree.setTree(input_cloud);
-}
+/*
+Input
+@cluster_indicies => vector of pointIndices that will be populated by clusters
 
+Function:
+Receiving cluster_indicies, the function will traverse all the points and divide the points in different clusters (which are vector of indices)
+*/
 template <typename PointT>
-pcl::PointIndices EuclideanCluster<PointT>::euclideanCluster(const std::vector<std::vector<float>>& points, KdTreeSpace::KdTree<PointT>* tree, float distanceTol)
-{
+void EuclideanCluster<PointT>::euclideanCluster(std::vector<pcl::PointIndices> &cluster_indices) {
 
-	// TODO: Fill out this function to return list of indices for each cluster
-	std::vector<std::vector<int>> clusters;
-	std::unordered_set<int> pointsProcessed;
+	std::vector<PointT> &points = input_cloud->points;
+	std::unordered_set<int> points_processed;
 
-	for (int indx = 0; indx < points.size(); indx++) {
-		const std::vector<float>& target = points[indx];
-		bool pointProcessed = pointsProcessed.find(indx) != pointsProcessed.end();
+	for (int point_indx = 0; point_indx < points.size(); point_indx++) {
+		bool point_processed = points_processed.find(point_indx) != points_processed.end();
 
-		if (pointProcessed)
+		if (point_processed)
 			continue;
 		
-		std::vector<int> cluster;
-		helperProximty(indx, cluster, pointsProcessed, tree, distanceTol, points); // call recursively helperProximity to find closest points relative to the target
-
-		clusters.push_back(cluster);
+		pcl::PointIndices cluster;
+		proximity(cluster, points_processed, point_indx);
+		cluster_indices.push_back(cluster);
 	}
-
-	// return clusters;
-	return {};
-
 }
