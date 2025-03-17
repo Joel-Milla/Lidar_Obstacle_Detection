@@ -8,6 +8,7 @@
 // using templates for processPointClouds so also include .cpp to help linker
 #include "processPointClouds.cpp"
 
+
 std::vector<Car> initHighway(bool renderScene, pcl::visualization::PCLVisualizer::Ptr& viewer)
 {
 
@@ -73,7 +74,9 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
     
     for(pcl::PointCloud<pcl::PointXYZ>::Ptr cluster : cloudClusters)
     {
-        std::cout << "cluster size ";
+        if (OUTPUT_LOGS)
+            std::cout << "cluster size ";
+        
         pointProcessor.numPoints(cluster);
         renderPointCloud(viewer,cluster,"obstCloud"+std::to_string(clusterId),colors[clusterId]);
 
@@ -108,7 +111,9 @@ void cityBlock(ProcessPointClouds<pcl::PointXYZI>* pointProcessorI, pcl::visuali
     for (int indx = 0; indx < cloudClusters.size(); indx++)
     {
         const pcl::PointCloud<pcl::PointXYZI>::Ptr& cluster = cloudClusters[indx];
-        std::cout << "cluster size ";
+
+        if (OUTPUT_LOGS)
+            std::cout << "cluster size ";
         pointProcessorI->numPoints(cluster);
         renderPointCloud(viewer, cluster, "obstCloud" + std::to_string(indx),colors[indx % 4]);
 
@@ -145,7 +150,8 @@ void initCamera(CameraAngle setAngle, pcl::visualization::PCLVisualizer::Ptr& vi
 
 int main (int argc, char** argv)
 {
-    std::cout << "starting enviroment" << std::endl;
+    if (OUTPUT_LOGS)
+        std::cout << "starting enviroment" << std::endl;
 
     pcl::visualization::PCLVisualizer::Ptr viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
     CameraAngle setAngle = FPS;

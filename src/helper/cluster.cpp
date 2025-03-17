@@ -5,7 +5,6 @@
 #include "pcl/PointIndices.h"
 #include <queue>
 #include <unordered_set>
-#include <utility>
 #include <vector>
 
 template <typename PointT>
@@ -41,7 +40,7 @@ Function:
 Recieves a reference cluster, and the function adds to that cluster all the nearby points. 
 */
 template <typename PointT>
-void EuclideanCluster<PointT>::proximity(pcl::PointIndices &cluster, std::unordered_set<int> points_processed, int point_indx) {
+void EuclideanCluster<PointT>::proximity(pcl::PointIndices &cluster, std::unordered_set<int>& points_processed, int point_indx) {
 	std::queue<int> queue;
 
 	queue.push(point_indx);
@@ -78,7 +77,7 @@ Receiving cluster_indicies, the function will traverse all the points and divide
 template <typename PointT>
 void EuclideanCluster<PointT>::euclideanCluster(std::vector<pcl::PointIndices> &cluster_indices) {
 
-	std::vector<PointT> &points = input_cloud->points;
+	const auto &points = input_cloud->points;
 	std::unordered_set<int> points_processed;
 
 	for (int point_indx = 0; point_indx < points.size(); point_indx++) {

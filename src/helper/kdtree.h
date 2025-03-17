@@ -31,17 +31,17 @@ namespace KdTreeSpace {
 		//* Main functions used in public methods
 		void traverse(Node<PointT>* &node, PointT target, std::vector<int> &ids, int level);
 		void insert(PointT point, int id);
-		Node<PointT>* root;
-		void setTree(std::vector<Node<PointT>> cloud);
-
+		void setTree(const std::vector<Node<PointT>>& cloud);
+		
 		//* To know if in xyz plane or only xy
+		Node<PointT>* root;
 		static constexpr int dimensions = traits::getDimensions<PointT>();
 		float distance_tol;
 
 		//* Helper functions
 		bool firstPointGreater(PointT p1, PointT p2, int depth);
-		bool firstPointWithinRangeSecond(const Node<PointT>& point, const Node<PointT>& reference_point) const;
-		bool withinDistance(Node<PointT> point, Node<PointT> reference_point);
+		bool firstPointWithinRangeSecond(const PointT& point, const PointT& reference_point) const;
+		bool withinDistance(PointT point, PointT reference_point);
 
 	public:
 
