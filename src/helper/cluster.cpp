@@ -7,13 +7,10 @@
 #include <vector>
 
 template <typename PointT>
-EuclideanCluster<PointT>::EuclideanCluster() {
+EuclideanCluster<PointT>::EuclideanCluster() {}
 
-}
 template <typename PointT>
-EuclideanCluster<PointT>::~EuclideanCluster() {
-
-}
+EuclideanCluster<PointT>::~EuclideanCluster() {}
 
 // Helper function receives the target point, and saves all the nearby points of the target into the cluster
 template <typename PointT>

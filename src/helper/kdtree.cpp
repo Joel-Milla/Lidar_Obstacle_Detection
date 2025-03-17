@@ -20,10 +20,7 @@ namespace KdTreeSpace {
     KdTree<PointT>::KdTree() : root(NULL) {}
 
     template <typename PointT>
-    KdTree<PointT>::~KdTree()
-    {
-        // delete root;
-    }
+    KdTree<PointT>::~KdTree() {}
 
 
     /*
@@ -144,6 +141,7 @@ namespace KdTreeSpace {
             //* Update queue so in next iteration insert the values that must be
             int new_axis = (axis + 1) % dimensions; // Must use modulo because in each vector we want to iterate between x, y, and z. This helps to keep count
 
+            //* Before creating the vectors, we need to validate that there are valid numbers to create them
             std::vector<Node<PointT>> left_vector;
             if (middle_indx > 0) {
                 left_vector.assign(points.begin(), points.begin() + middle_indx);
@@ -187,66 +185,140 @@ namespace KdTreeSpace {
         setTree(indx_point_cloud);
     }
 
-    template <typename PointT> 
-    void KdTree<PointT>::traverse(Node<PointT>* &node, PointT target, float distanceTol, std::vector<int> &ids, int level) {
-        if (node == NULL) // return when is null, terminating decision of recursion
-            return;
-        
-        float target_x = target[0];
-        float target_y = target[1];
-        
-        // define the boundaries of the box around the target
-        float minX = target_x - distanceTol;
-        float maxX = target_x + distanceTol;
-        float minY = target_y - distanceTol;
-        float maxY = target_y + distanceTol;
-        
-        // the current value of the node
-        int curr_id = node->id;
-        float curr_x = node->point[0];
-        float curr_y = node->point[1];
-        
-        // bool variables to know if current node is within boundaries
-        bool currx_within = minX <= curr_x && curr_x <= maxX;
-        bool curry_within = minY <= curr_y && curr_y <= maxY;
-        bool within_box = currx_within && curry_within;
-        
-        // go left if max value is less than curr axes value. go right when min value is greater than curr axes value. 
-        int indx = level % 2;
-        
-        // you go left when minAxes is left. why? because imagine, if are comapring xs, you will go left if the left part of the boudnary is less than current value, and then go also right if maxAxes of boudary is greater than your current value. 
-        bool go_left = (target[indx] - distanceTol) < node->point[indx];
-        bool go_right = (target[indx] + distanceTol) > node->point[indx];
-        
-        level += 1; // increase level for next call
-        
-        // Just need to check if is within box, to add it. If not, just omit and continue with code
-        if (within_box) {
-            float distance = sqrt( (target_x - curr_x)*(target_x - curr_x) + (target_y - curr_y)*(target_y - curr_y));
-            
-            // check if distance is within distance tolerance
-            if (distance <= distanceTol)
-            ids.push_back(curr_id);
+    /*
+    Input: 
+    @point => this is the point that we want to know if is within range of reference point given a distance tolerance
+    @reference_point => our reference point which defines our surrounding permitted area
+    @distance_tol => distance for a point to be within valid surroundings
+
+    Return:
+    true/false => return true or false if is within range
+
+    Function:
+    This function receives a point and a reference point, and tells if the point is within distance_tol of the reference point
+    */
+    template <typename PointT>
+    bool KdTree<PointT>::firstPointWithinRangeSecond(const Node<PointT>& point, const Node<PointT>& reference_point, int distance_tol) const {
+        PointT curr_point = point.point;
+        PointT ref_point = reference_point.point;
+
+        bool withinBoundariesX = true;
+        bool withinBoundariesY = true;
+        bool withinBoundariesZ = true;
+
+        //* Check manually each dimensions if it exists, and then check if point is within boundaries
+        if (dimensions > 0) {
+            int lowerX = curr_point.x - distance_tol;
+            int upperX = curr_point.x + distance_tol;
+            withinBoundariesX = (lowerX <= ref_point.x) && (ref_point.x <= upperX);
+        }
+
+        if (dimensions > 1) {
+            int lowerY = curr_point.y - distance_tol;
+            int upperY = curr_point.y + distance_tol;
+            withinBoundariesY = (lowerY <= ref_point.y) && (ref_point.y <= upperY);
+        }
+
+        if (dimensions == 3) {
+            int lowerZ = curr_point.z - distance_tol;
+            int upperZ = curr_point.z + distance_tol;
+            withinBoundariesZ = (lowerZ <= ref_point.z) && (ref_point.z <= upperZ);
         }
         
-        // Both of the conditionals are independent. Can occur that both get executed (when within boundaries) or just one of them
-        
-        if (go_left) { // if only need to go left
-            traverse(node->left, target, distanceTol, ids, level);
-        } 
-        
-        if (go_right) { // if only need to go and check right boundary
-            traverse(node->right, target, distanceTol, ids, level);
+        return withinBoundariesX && withinBoundariesY && withinBoundariesZ;
+    }
+
+    /*
+    Inputs
+    @p1, p2 => Node points that we want to know if are withing a distance. 
+    @distance_tol => minimum distance tolerance for points to be "valid"
+
+    Returns:
+    true/false => if the two points are within distance_tol
+    */
+    template <typename PointT>
+    bool KdTree<PointT>::withinDistance(Node<PointT> p1, Node<PointT> p2, int distance_tol) {
+        float distance = 0.0;
+        //* Depending on the dimension, the sqrt changes
+        switch (dimensions) {
+        case 3:
+            distance = sqrt( 
+                pow((p1.point.x - p2.point.x), 2) + 
+                pow((p1.point.y - p2.point.y), 2) +
+                pow((p1.point.z - p2.point.z), 2));
+            return distance <= distance_tol;
+        case 2:
+            distance = sqrt( 
+                pow((p1.point.x - p2.point.x), 2) + 
+                pow((p1.point.y - p2.point.y), 2));
+            return distance <= distance_tol;
+        case 1:
+            distance = sqrt( 
+                pow((p1.point.x - p2.point.x), 2));
+            return distance <= distance_tol;
+        default:
+            return false;
         }
     }
 		
-    // return a list of point ids in the tree that are within distance of target
+    /*
+    Input:
+    @target => Point which we want to find all the nearest points
+    @distanceTol => distance tolerance (the maximum distance) for a near point to be consider 'close'
+    
+    Returns:
+    @indices => returns a vector of indices
+
+    Function:
+    This function receives a point to find nearest points within a distance tolerance. It obtains the nearest points and then returns their original indices of the point cloud
+    */ 
     template <typename PointT> 
-    std::vector<PointT> KdTree<PointT>::search(PointT target, float distanceTol)
+    std::vector<int> KdTree<PointT>::search(PointT target, float distance_tol)
     {
-        std::vector<int> ids;
-        traverse(root, target, distanceTol, ids, 0);
-        return ids;
+        std::vector<int> indices;
+        
+        std::queue<std::pair<Node<PointT>, int>> queue;
+        queue.push({root, 0});
+
+        //* Use a queue to traverse the entire tree
+        while (!queue.empty()) {
+            Node<PointT> curr_point = queue.front().first;
+            int level = queue.front().second;
+            queue.pop();
+
+            bool within_range = firstPointWithinRangeSecond(curr_point, target, distance_tol);
+
+            //* Depending on the dimensions that the point has, calculate if we need to go left/right
+            bool traverse_left = false;
+            bool traverse_right = false;
+            int target_axis = level % dimensions;
+            switch (target_axis) {
+            case 0:
+                traverse_left = (target.x - distance_tol) < curr_point.x;
+                traverse_right = (target.x + distance_tol) > curr_point.x;
+            case 1:
+                traverse_left = (target.y - distance_tol) < curr_point.y;
+                traverse_right = (target.y + distance_tol) > curr_point.y;
+            case 2:
+                traverse_left = (target.z - distance_tol) < curr_point.z;
+                traverse_right = (target.z + distance_tol) > curr_point.z;
+            }
+
+            if (within_range) {
+                if (withinDistance(target, curr_point, distance_tol))
+                    indices.push_back(curr_point.indx);
+            }
+
+            //* If we need to traverse the left/right side of the tree, then that node will be added to the queue
+            if (traverse_left)
+                queue.push({curr_point.left, level + 1});
+        
+            if (traverse_right)
+                queue.push({curr_point.right, level + 1});
+
+        }
+
+        return indices;
     }
 		
 }
