@@ -1,8 +1,8 @@
-
 #include "kdtree.h"
 #include "pcl/point_cloud.h"
 #include <algorithm>
 #include <queue>
+#include <stack>
 #include <utility>
 #include <vector>
 
@@ -140,12 +140,13 @@ namespace KdTreeSpace {
             };
 
 
-            //* Sort points vector because we always want to pick the middle point
-            std::sort(points.begin(), points.end(), sort_by_axis);
             
             //* Insert the middle point into the tree (to have a balanced tree)
             int size = points.size();
             int middle_indx = size / 2;
+            
+            //* nth_element just makes sure that the nth element of the array is the same as the nth element in the sorted array. this because we are only interested on middle element. 
+            std::nth_element(points.begin(), points.begin() + middle_indx, points.end(), sort_by_axis);
 
             PointT middle_point = points[middle_indx].point;
             int real_indx = points[middle_indx].indx;
@@ -248,23 +249,29 @@ namespace KdTreeSpace {
     template <typename PointT>
     bool KdTree<PointT>::withinDistance(const PointT& target_point, const PointT& source_point) const {
         float distance = 0.0;
+        float dx, dy, dz;
+
+        const float distanceTolSquared = distance_tol * distance_tol;
         //* Depending on the dimension, the distance function changes
         switch (dimensions) {
         case 3:
-            distance = ( 
-                pow((target_point.x - source_point.x), 2) + 
-                pow((target_point.y - source_point.y), 2) +
-                pow((target_point.z - source_point.z), 2));
-            return distance <= pow(distance_tol, 2);
+            dx = target_point.x - source_point.x;
+            dy = target_point.y - source_point.y;
+            dz = target_point.z - source_point.z;
+
+            distance = (dx * dx) + (dy * dy) + (dz * dz);
+            return distance <= distanceTolSquared;
         case 2:
-            distance = ( 
-                pow((target_point.x - source_point.x), 2) + 
-                pow((target_point.y - source_point.y), 2));
-            return distance <= pow(distance_tol, 2);
+            dx = target_point.x - source_point.x;
+            dy = target_point.y - source_point.y;
+
+            distance = (dx * dx) + (dy * dy) + (dz * dz);
+            return distance <= distanceTolSquared;
         case 1:
-            distance = ( 
-                pow((target_point.x - source_point.x), 2));
-            return distance <= pow(distance_tol, 2);
+            dx = target_point.x - source_point.x;
+
+            distance = (dx * dx) + (dy * dy) + (dz * dz);
+            return distance <= distanceTolSquared;
         default:
             return false;
         }
@@ -285,16 +292,16 @@ namespace KdTreeSpace {
         if (root == nullptr) return {};
         std::vector<int> indices;
         
-        std::queue<std::pair<Node<PointT>*, int>> queue;
-        queue.push({root, 0});
+        std::stack<std::pair<Node<PointT>*, int>> stack;
+        stack.push({root, 0});
 
         //* Use a queue to traverse the entire tree
-        while (!queue.empty()) {
-            Node<PointT>* curr_point = queue.front().first;
-            int level = queue.front().second;
-            queue.pop();
+        while (!stack.empty()) {
+            Node<PointT>* curr_point = stack.top().first;
+            int level = stack.top().second;
+            stack.pop();
 
-            bool within_range = firstPointWithinRangeSecond(curr_point->point, target);
+            // bool within_range = firstPointWithinRangeSecond(curr_point->point, target);
 
             //* Depending on the dimensions that the point has, calculate if we need to go left/right
             bool traverse_left = false;
@@ -315,17 +322,16 @@ namespace KdTreeSpace {
                 break;
             }
 
-            if (within_range) {
-                if (withinDistance(target, curr_point->point))
+            if (withinDistance(target, curr_point->point))
                     indices.push_back(curr_point->indx);
-            }
+            
 
             //* If we need to traverse the left/right side of the tree, then that node will be added to the queue
             if (traverse_left && curr_point->left != nullptr)
-                queue.push({curr_point->left, level + 1});
+                stack.push({curr_point->left, level + 1});
         
             if (traverse_right && curr_point->right != nullptr)
-                queue.push({curr_point->right, level + 1});
+                stack.push({curr_point->right, level + 1});
 
         }
 

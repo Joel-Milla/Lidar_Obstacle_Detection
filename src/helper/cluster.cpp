@@ -3,8 +3,8 @@
 #include "cluster.h"
 #include "pcl/PointIndices.h"
 #include <queue>
-#include <unordered_set>
 #include <vector>
+
 
 template <typename PointT>
 EuclideanCluster<PointT>::EuclideanCluster() {}
@@ -46,11 +46,11 @@ Function:
 Recieves a reference cluster, and the function adds to that cluster all the nearby points. 
 */
 template <typename PointT>
-void EuclideanCluster<PointT>::proximity(pcl::PointIndices &cluster, std::unordered_set<int>& points_processed, int point_indx) const {
+void EuclideanCluster<PointT>::proximity(pcl::PointIndices &cluster, boost::dynamic_bitset<>& points_processed, int point_indx) const {
 	std::queue<int> queue;
 
 	queue.push(point_indx);
-	points_processed.insert(point_indx);
+	points_processed.set(point_indx);
 
 	//* Iterate over all the nearby points
 	while (!queue.empty()) {
@@ -63,12 +63,12 @@ void EuclideanCluster<PointT>::proximity(pcl::PointIndices &cluster, std::unorde
 
 		//* We iterate over the nearby points, add them to the queue to be processed, and insert them into the processed set in order to not be added twice
 		for (const int& point : nearby_points) {
-			bool point_processed = points_processed.find(point) != points_processed.end();
+			bool point_processed = points_processed.test(point);
 			if (point_processed)
 				continue;
 
 			queue.push(point);
-			points_processed.insert(point);
+			points_processed.set(point);
 		}
 	}
 }
@@ -84,10 +84,12 @@ template <typename PointT>
 void EuclideanCluster<PointT>::euclideanCluster(std::vector<pcl::PointIndices> &cluster_indices) const {
 
 	const auto &points = input_cloud->points;
-	std::unordered_set<int> points_processed;
+	// std::unordered_set<int> points_processed;
+	// std::bitset<input_cloud->points.size()> points_processed(0);
+	boost::dynamic_bitset<> points_processed(input_cloud->points.size());
 
 	for (int point_indx = 0; point_indx < points.size(); point_indx++) {
-		bool point_processed = points_processed.find(point_indx) != points_processed.end();
+		bool point_processed = points_processed.test(point_indx);
 
 		if (point_processed)
 			continue;

@@ -4,13 +4,16 @@
 #include "./helper/segment.cpp"
 // #include "./helper/cluster.h"
 #include "./helper/cluster.cpp"
+#include <chrono>
+#include <iostream> 
+
 /*
 Why need to include the segment.cpp and how does this not throw an error because of multiple declaration of same cpp file? 
 
 When the compiler is making the .o files, if there is a class template, it needs to see the definition (and when is not template, it does not, the declaration is enough). But, the definition of the class and linking stage happens until later during linking stage, at that point this specific class has no way of knowing the definition that is happening in another file because the linking stage has not happened. So, you need to import the cpp file so the compiler is able to see the definition of the file during compilation stage. and the compiler and linker work together so the same template is not declared twice, so as to avoid compilation errors.
 */
 
-constexpr bool OUTPUT_LOGS = false;
+constexpr bool OUTPUT_LOGS = true;
 
 //constructor:
 template<typename PointT>
@@ -20,7 +23,6 @@ ProcessPointClouds<PointT>::ProcessPointClouds() {}
 //de-constructor:
 template<typename PointT>
 ProcessPointClouds<PointT>::~ProcessPointClouds() {}
-
 
 template<typename PointT>
 void ProcessPointClouds<PointT>::numPoints(typename pcl::PointCloud<PointT>::Ptr cloud)
@@ -140,7 +142,7 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(ty
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     
     if (OUTPUT_LOGS)
-        std::cout << "filtering took " << elapsedTime.count() << " milliseconds" << std::endl;
+        std::cout << "Filtering took: " << (elapsedTime.count()*0.001) << " seconds" << std::endl;
 
     return cloud_without_roofPoints;
 
@@ -223,11 +225,13 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
 
-    if (OUTPUT_LOGS)
-        std::cout << "plane segmentation took " << elapsedTime.count() << " milliseconds" << std::endl;
-
+    
     // The separte clouds returns a pair with the inliers (the points that are part of the plane) and the cloud that was analyzed (so the full point cloud without segmentation)
     std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> segResult = SeparateClouds(inliers,cloud);
+
+    if (OUTPUT_LOGS)
+        std::cout << "Plane segmentation took: " << (elapsedTime.count() * 0.001) << " seconds" << std::endl;
+ 
     return segResult;
 }
 
@@ -254,23 +258,42 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
     std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
 
     //* PCL TREE AND CLUSTERING IMPLEMENTATION
-    // // Creating the KdTree object for the search method of the extraction
-    // typename pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
-    // tree->setInputCloud (cloud);
+    startTime = std::chrono::steady_clock::now();
 
-    // // Extracting all the different clusters and saving their indices of each cluster. PointIndices is a vector of indices
-    // pcl::EuclideanClusterExtraction<PointT> ec;
-    // ec.setClusterTolerance(cluster_tolerance); // value to low will create many clusters from one object, value to high multiple objects as one cluster.
-    // ec.setMinClusterSize(min_size);
-    // ec.setMaxClusterSize(max_size);
-    // ec.setSearchMethod(tree); // Search clusters using kdtree
-    // ec.setInputCloud(cloud);
-    // ec.extract(clusters_indices);
+
+    // Creating the KdTree object for the search method of the extraction
+    typename pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
+    tree->setInputCloud (cloud);
+
+    // Extracting all the different clusters and saving their indices of each cluster. PointIndices is a vector of indices
+    pcl::EuclideanClusterExtraction<PointT> ec;
+    ec.setClusterTolerance(cluster_tolerance); // value to low will create many clusters from one object, value to high multiple objects as one cluster.
+    ec.setMinClusterSize(min_size);
+    ec.setMaxClusterSize(max_size);
+    ec.setSearchMethod(tree); // Search clusters using kdtree
+    ec.setInputCloud(cloud);
+    ec.extract(clusters_indices);
+
+    auto endTime = std::chrono::steady_clock::now();
+    auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+
+    if (OUTPUT_LOGS)
+        std::cout << "Clustering PCL took: " << (elapsedTime.count() * 0.001) << " seconds and found " << clusters.size() << " clusters" << std::endl;
+
 
     //* MY OWN IMPLEMENTATION OF TREE AND CLUSTERING ALGORITHMS
+    startTime = std::chrono::steady_clock::now();
+
     EuclideanCluster<PointT> clustering;
     clustering.setInputCloud(cloud, cluster_tolerance);
     clustering.euclideanCluster(clusters_indices);
+    
+    endTime = std::chrono::steady_clock::now();
+    elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+
+    if (OUTPUT_LOGS)
+        std::cout << "Clustering own took: " << (elapsedTime.count() * 0.001) << " seconds and found " << clusters.size() << " clusters" << std::endl;
+
 
     // For each cluster, iterate through the indices and get the original points of the cloud
     for (const auto& cluster : clusters_indices) {
@@ -289,11 +312,11 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
         clusters.push_back(cloud_cluster);
     }
 
-    auto endTime = std::chrono::steady_clock::now();
-    auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    // auto endTime = std::chrono::steady_clock::now();
+    // auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
 
-    if (OUTPUT_LOGS)
-        std::cout << "clustering took " << elapsedTime.count() << " milliseconds and found " << clusters.size() << " clusters" << std::endl;
+    // if (OUTPUT_LOGS)
+    //     std::cout << "Clustering took: " << (elapsedTime.count() * 0.001) << " seconds and found " << clusters.size() << " clusters" << std::endl;
 
     return clusters;
 }
