@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <iterator>
 #include <queue>
-#include <stack>
 #include <utility>
 #include <vector>
 
@@ -256,12 +255,12 @@ namespace KdTreeSpace {
             dx = target_point.x - source_point.x;
             dy = target_point.y - source_point.y;
 
-            distance = (dx * dx) + (dy * dy) + (dz * dz);
+            distance = (dx * dx) + (dy * dy);
             return distance <= distanceTolSquared;
         case 1:
             dx = target_point.x - source_point.x;
 
-            distance = (dx * dx) + (dy * dy) + (dz * dz);
+            distance = (dx * dx);
             return distance <= distanceTolSquared;
         default:
             return false;
@@ -284,14 +283,14 @@ namespace KdTreeSpace {
         if (root == nullptr) return {};
         std::vector<int> indices;
         
-        std::stack<std::pair<Node<PointT>*, int>> stack;
-        stack.push({root, 0});
+        std::queue<std::pair<Node<PointT>*, int>> queue;
+        queue.push({root, 0});
 
         //* Use a queue to traverse the entire tree
-        while (!stack.empty()) {
-            Node<PointT>* curr_point = stack.top().first;
-            int level = stack.top().second;
-            stack.pop();
+        while (!queue.empty()) {
+            Node<PointT>* curr_point = queue.front().first;
+            int level = queue.front().second;
+            queue.pop();
 
             // bool within_range = firstPointWithinRangeSecond(curr_point->point, target);
 
@@ -320,10 +319,10 @@ namespace KdTreeSpace {
 
             //* If we need to traverse the left/right side of the tree, then that node will be added to the queue
             if (traverse_left && curr_point->left != nullptr)
-                stack.push({curr_point->left, level + 1});
+                queue.push({curr_point->left, level + 1});
         
             if (traverse_right && curr_point->right != nullptr)
-                stack.push({curr_point->right, level + 1});
+                queue.push({curr_point->right, level + 1});
 
         }
 

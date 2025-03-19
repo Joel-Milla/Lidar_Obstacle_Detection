@@ -258,8 +258,6 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
     std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
 
     //* PCL TREE AND CLUSTERING IMPLEMENTATION
-
-
     // // Creating the KdTree object for the search method of the extraction
     // typename pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
     // tree->setInputCloud (cloud);
@@ -275,8 +273,6 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
 
 
     //* MY OWN IMPLEMENTATION OF TREE AND CLUSTERING ALGORITHMS
-    startTime = std::chrono::steady_clock::now();
-
     EuclideanCluster<PointT> clustering;
     clustering.setInputCloud(cloud, cluster_tolerance);
     clustering.setMinClusterSize(min_size);

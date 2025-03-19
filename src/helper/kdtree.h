@@ -36,9 +36,6 @@ namespace KdTreeSpace {
 		void setTree(Iterator first, Iterator last);
 		void deleteTree(Node<PointT>* node);
 
-		template<class Iterator>
-		void setTree(Iterator first, Iterator last, int axis);
-		
 		//* To know if in xyz plane or only xy
 		Node<PointT>* root;
 		static constexpr int dimensions = traits::getDimensions<PointT>();
