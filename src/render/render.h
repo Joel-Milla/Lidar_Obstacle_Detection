@@ -6,8 +6,6 @@
 #define RENDER_H
 #include <pcl/visualization/pcl_visualizer.h>
 #include "box.h"
-#include <iostream>
-#include <vector>
 #include <string>
 
 struct Color
@@ -51,7 +49,7 @@ struct Car
   	Color color;
 
   	Car(Vect3 setPosition, Vect3 setDimensions, Color setColor, std::string setName)
-    	: position(setPosition), dimensions(setDimensions), color(setColor), name(setName)
+    	: position(setPosition), dimensions(setDimensions), name(setName), color(setColor)
   	{}
 
   	void render(pcl::visualization::PCLVisualizer::Ptr& viewer)

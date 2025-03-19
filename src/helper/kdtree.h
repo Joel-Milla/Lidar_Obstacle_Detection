@@ -31,8 +31,13 @@ namespace KdTreeSpace {
 	private:
 		//* Main functions used in public methods
 		void insert(PointT point, int indx);
-		void setTree(const std::vector<Node<PointT>>& cloud);
+
+		template <class Iterator>
+		void setTree(Iterator first, Iterator last);
 		void deleteTree(Node<PointT>* node);
+
+		template<class Iterator>
+		void setTree(Iterator first, Iterator last, int axis);
 		
 		//* To know if in xyz plane or only xy
 		Node<PointT>* root;
@@ -49,7 +54,7 @@ namespace KdTreeSpace {
 		KdTree();
 		~KdTree();
 		
-		void setTree(typename pcl::PointCloud<PointT>::Ptr cloud);
+		void setTree(const typename pcl::PointCloud<PointT>::ConstPtr& cloud);
 		std::vector<int> search(const PointT& target) const;
 		void setDistanceTol(float distance_tol);
 	};

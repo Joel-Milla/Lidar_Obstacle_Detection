@@ -1,6 +1,7 @@
 #include "kdtree.h"
 #include "pcl/point_cloud.h"
 #include <algorithm>
+#include <iterator>
 #include <queue>
 #include <stack>
 #include <utility>
@@ -102,26 +103,25 @@ namespace KdTreeSpace {
         *curr_node = new Node<PointT>(point, indx);
     }
 
-    /*
-    Input:
-    @cloud => preprocessed cloud data
+    /**
+     * @brief Function creates a tree given iterators of node vectors
+     * 
+     * Use iterators to avoid creating a queue of vector of O(n^2) space, to O(N) space
+     *
+     * @param first first iterator of vector
+     * @param last last iterator of vector
+     * @return template <typename PointT> void
+     */
+    template <typename PointT>
+    template <class Iterator>
+    void KdTree<PointT>::setTree(Iterator first, Iterator last) {
+        std::queue<std::pair<std::pair<Iterator, Iterator>, int>> points_to_be_proccessed;
+        points_to_be_proccessed.push({{first, last}, 0}); // Set first/last iterator, and set initial axis to be added
 
-    Return:
-    void
-
-    Function:
-    This function receives the preprocess data which facillitates the construction of the tree
-    */
-    template <typename PointT> 
-    void KdTree<PointT>::setTree(const std::vector<Node<PointT>>& cloud) {
-        std::queue<std::pair<std::vector<Node<PointT>>, int> > points_to_be_proccessed;
-        int axis = 0;
-        points_to_be_proccessed.push({cloud, axis});
-
-        //* To avoid recursion and getting stack overflow, we will use a queue to sort iteratively the vector, get the middle point, insert, and continue. In a way that we fill each time every level
+        //* To avoid recursion, we will use a queue to sort iteratively the vector, get the middle point, insert, and continue. In a way that we fill each time every level
         while (!points_to_be_proccessed.empty()) {
-            std::vector<Node<PointT>> points = points_to_be_proccessed.front().first;
-            axis = points_to_be_proccessed.front().second;
+            auto [firstIt, lastIt] = points_to_be_proccessed.front().first;
+            int axis = points_to_be_proccessed.front().second;
             points_to_be_proccessed.pop();
 
             //* This lambda function is a helper sort function to consider different axis (xyz)
@@ -142,14 +142,14 @@ namespace KdTreeSpace {
 
             
             //* Insert the middle point into the tree (to have a balanced tree)
-            int size = points.size();
+            auto size = std::distance(firstIt, lastIt);
             int middle_indx = size / 2;
             
             //* nth_element just makes sure that the nth element of the array is the same as the nth element in the sorted array. this because we are only interested on middle element. 
-            std::nth_element(points.begin(), points.begin() + middle_indx, points.end(), sort_by_axis);
+            std::nth_element(firstIt, firstIt + middle_indx, lastIt, sort_by_axis);
 
-            PointT middle_point = points[middle_indx].point;
-            int real_indx = points[middle_indx].indx;
+            PointT middle_point = (*(firstIt + middle_indx)).point;
+            int real_indx = (*(firstIt + middle_indx)).indx;
 
             insert(middle_point, real_indx);
 
@@ -157,24 +157,15 @@ namespace KdTreeSpace {
             int new_axis = (axis + 1) % dimensions; // Must use modulo because in each vector we want to iterate between x, y, and z. This helps to keep count
 
             //* Before creating the vectors, we need to validate that there are valid numbers to create them
-            std::vector<Node<PointT>> left_vector;
-            if (middle_indx > 0) {
-                left_vector.assign(points.begin(), points.begin() + middle_indx);
-            }
+            if (middle_indx > 0) 
+                points_to_be_proccessed.push({{firstIt, firstIt + middle_indx}, new_axis});
 
-            std::vector<Node<PointT>> right_vector;
-            if (middle_indx + 1 < points.size()) {
-                right_vector.assign(points.begin() + middle_indx + 1, points.end());
-            }
-
-            if (!left_vector.empty())
-                points_to_be_proccessed.push({left_vector, new_axis});
+            if (middle_indx + 1 < size) 
+                points_to_be_proccessed.push({{firstIt + middle_indx + 1, lastIt}, new_axis});
             
-            if (!right_vector.empty())
-                points_to_be_proccessed.push({right_vector, new_axis});
         }
-        
     }
+
 
     /*
     Input:
@@ -187,7 +178,7 @@ namespace KdTreeSpace {
     This main function receives a point cloud, preprocess the data, and uses the data to then construct the tree by calling another function
     */
     template <typename PointT>
-    void KdTree<PointT>::setTree(typename pcl::PointCloud<PointT>::Ptr cloud) {
+    void KdTree<PointT>::setTree(const typename pcl::PointCloud<PointT>::ConstPtr& cloud) {
         root = nullptr;
         int cloud_size = cloud->points.size();
         std::vector<Node<PointT>> indx_point_cloud(cloud_size);
@@ -197,7 +188,7 @@ namespace KdTreeSpace {
             indx_point_cloud[indx] = {point, indx};
         }
 
-        setTree(indx_point_cloud);
+        setTree(indx_point_cloud.begin(), indx_point_cloud.end());
     }
 
     /*
@@ -276,6 +267,7 @@ namespace KdTreeSpace {
             return false;
         }
     }
+    
 		
     /*
     Input:

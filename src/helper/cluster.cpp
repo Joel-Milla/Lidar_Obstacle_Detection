@@ -88,7 +88,7 @@ void EuclideanCluster<PointT>::euclideanCluster(std::vector<pcl::PointIndices> &
 	// std::bitset<input_cloud->points.size()> points_processed(0);
 	boost::dynamic_bitset<> points_processed(input_cloud->points.size());
 
-	for (int point_indx = 0; point_indx < points.size(); point_indx++) {
+	for (auto point_indx = 0; point_indx < points.size(); point_indx++) {
 		bool point_processed = points_processed.test(point_indx);
 
 		if (point_processed)

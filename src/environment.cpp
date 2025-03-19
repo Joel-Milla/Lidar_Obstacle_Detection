@@ -106,7 +106,7 @@ void cityBlock(ProcessPointClouds<pcl::PointXYZI>* pointProcessorI, pcl::visuali
     renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,1,0)); // render plane cloud
     
     //* STEP3. RENDER BOUNDING BOXES AROUND OBJECTS
-    for (int indx = 0; indx < cloudClusters.size(); indx++)
+    for (auto indx = 0; indx < cloudClusters.size(); indx++)
     {
         const pcl::PointCloud<pcl::PointXYZI>::Ptr& cluster = cloudClusters[indx];
 
