@@ -114,7 +114,10 @@ void cityBlock(ProcessPointClouds<pcl::PointXYZI>* pointProcessorI, pcl::visuali
 
         // Apply bounding boxes surrounding the objects
         Box box = pointProcessorI->BoundingBox(cluster);
+        // BoxQ boxQ = pointProcessorI->BoundingBoxQ(cluster);
+
         renderBox(viewer, box, indx);
+        // renderBox(viewer, boxQ, indx);
     }
 
 }
@@ -158,23 +161,23 @@ int main (int argc, char** argv)
     auto streamIterator = stream.begin();
     pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloudI;
 
-    // inputCloudI = pointProcessorI->loadPcd("../src/sensors/data/pcd/data_1/0000000000.pcd");
-    // cityBlock(pointProcessorI, viewer, inputCloudI);
+    inputCloudI = pointProcessorI->loadPcd("../src/sensors/data/pcd/data_1/0000000000.pcd");
+    cityBlock(pointProcessorI, viewer, inputCloudI);
 
     while (!viewer->wasStopped ())
     {
 
     // Clear viewer
-    viewer->removeAllPointClouds();
-    viewer->removeAllShapes();
+    // viewer->removeAllPointClouds();
+    // viewer->removeAllShapes();
 
-    // Load pcd and run obstacle detection process
-    inputCloudI = pointProcessorI->loadPcd((*streamIterator).string());
-    cityBlock(pointProcessorI, viewer, inputCloudI);
+    // // Load pcd and run obstacle detection process
+    // inputCloudI = pointProcessorI->loadPcd((*streamIterator).string());
+    // cityBlock(pointProcessorI, viewer, inputCloudI);
         
-    streamIterator++;
-    if(streamIterator == stream.end())
-        streamIterator = stream.begin();
+    // streamIterator++;
+    // if(streamIterator == stream.end())
+    //     streamIterator = stream.begin();
 
     viewer->spinOnce ();
     }
