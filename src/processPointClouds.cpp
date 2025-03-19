@@ -258,27 +258,20 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
     std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
 
     //* PCL TREE AND CLUSTERING IMPLEMENTATION
-    startTime = std::chrono::steady_clock::now();
 
 
-    // Creating the KdTree object for the search method of the extraction
-    typename pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
-    tree->setInputCloud (cloud);
+    // // Creating the KdTree object for the search method of the extraction
+    // typename pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
+    // tree->setInputCloud (cloud);
 
-    // Extracting all the different clusters and saving their indices of each cluster. PointIndices is a vector of indices
-    pcl::EuclideanClusterExtraction<PointT> ec;
-    ec.setClusterTolerance(cluster_tolerance); // value to low will create many clusters from one object, value to high multiple objects as one cluster.
-    ec.setMinClusterSize(min_size);
-    ec.setMaxClusterSize(max_size);
-    ec.setSearchMethod(tree); // Search clusters using kdtree
-    ec.setInputCloud(cloud);
-    ec.extract(clusters_indices);
-
-    auto endTime = std::chrono::steady_clock::now();
-    auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-
-    if (OUTPUT_LOGS)
-        std::cout << "Clustering PCL took: " << (elapsedTime.count() * 0.001) << " seconds and found " << clusters.size() << " clusters" << std::endl;
+    // // Extracting all the different clusters and saving their indices of each cluster. PointIndices is a vector of indices
+    // pcl::EuclideanClusterExtraction<PointT> ec;
+    // ec.setClusterTolerance(cluster_tolerance); // value to low will create many clusters from one object, value to high multiple objects as one cluster.
+    // ec.setMinClusterSize(min_size);
+    // ec.setMaxClusterSize(max_size);
+    // ec.setSearchMethod(tree); // Search clusters using kdtree
+    // ec.setInputCloud(cloud);
+    // ec.extract(clusters_indices);
 
 
     //* MY OWN IMPLEMENTATION OF TREE AND CLUSTERING ALGORITHMS
@@ -286,13 +279,9 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
 
     EuclideanCluster<PointT> clustering;
     clustering.setInputCloud(cloud, cluster_tolerance);
+    clustering.setMinClusterSize(min_size);
+    clustering.setMaxClusterSize(max_size);
     clustering.euclideanCluster(clusters_indices);
-    
-    endTime = std::chrono::steady_clock::now();
-    elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-
-    if (OUTPUT_LOGS)
-        std::cout << "Clustering own took: " << (elapsedTime.count() * 0.001) << " seconds and found " << clusters.size() << " clusters" << std::endl;
 
 
     // For each cluster, iterate through the indices and get the original points of the cloud
@@ -312,11 +301,11 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
         clusters.push_back(cloud_cluster);
     }
 
-    // auto endTime = std::chrono::steady_clock::now();
-    // auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    auto endTime = std::chrono::steady_clock::now();
+    auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
 
-    // if (OUTPUT_LOGS)
-    //     std::cout << "Clustering took: " << (elapsedTime.count() * 0.001) << " seconds and found " << clusters.size() << " clusters" << std::endl;
+    if (OUTPUT_LOGS)
+        std::cout << "Clustering took: " << (elapsedTime.count() * 0.001) << " seconds and found " << clusters.size() << " clusters" << std::endl;
 
     return clusters;
 }

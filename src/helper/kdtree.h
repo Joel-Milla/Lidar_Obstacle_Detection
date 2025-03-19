@@ -57,6 +57,7 @@ namespace KdTreeSpace {
 		void setTree(const typename pcl::PointCloud<PointT>::ConstPtr& cloud);
 		std::vector<int> search(const PointT& target) const;
 		void setDistanceTol(float distance_tol);
+		void setMaxClusterSize(int max_size);
 	};
 }
 

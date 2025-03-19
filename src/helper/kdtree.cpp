@@ -63,7 +63,7 @@ namespace KdTreeSpace {
             return first_point.z > second_point.z;
         default:
             return false;
-        }     
+        }
     }
 
     /*

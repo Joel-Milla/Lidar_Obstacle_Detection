@@ -58,6 +58,11 @@ void EuclideanCluster<PointT>::proximity(pcl::PointIndices &cluster, boost::dyna
 		queue.pop();
 		cluster.indices.push_back(curr_point_indx);
 
+		if (cluster.indices.size() > max_cluster_size) {
+			cluster.indices = {};
+			return;
+		}
+
 		PointT curr_point = input_cloud->points[curr_point_indx];
 		std::vector<int> nearby_points = tree.search(curr_point);
 
@@ -96,6 +101,30 @@ void EuclideanCluster<PointT>::euclideanCluster(std::vector<pcl::PointIndices> &
 		
 		pcl::PointIndices cluster;
 		proximity(cluster, points_processed, point_indx);
-		cluster_indices.push_back(cluster);
+
+		if (cluster.indices.size() != 0 && cluster.indices.size() > min_cluster_size)
+			cluster_indices.push_back(cluster);
 	}
+}
+
+/**
+	* @brief Sets the value of max_cluster size to limit the search results 
+	* 
+	* @param max_size maximum size
+	* @return template <typename PointT> void 
+	*/
+template <typename PointT>
+void EuclideanCluster<PointT>::setMaxClusterSize(int max_size) {
+	max_cluster_size = max_size;
+}
+
+/**
+	* @brief Sets the value of min_cluster size to limit the search results 
+	* 
+	* @param max_size minimum size
+	* @return template <typename PointT> void 
+	*/
+template <typename PointT>
+void EuclideanCluster<PointT>::setMinClusterSize(int min_size) {
+	min_cluster_size = min_size;
 }
