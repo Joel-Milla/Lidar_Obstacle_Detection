@@ -199,23 +199,23 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
 	pcl::PointIndices::Ptr inliers {new pcl::PointIndices}; // ptr to the inliers
     
     //* CODE USING PCL BUILTIN RANSAC
-    pcl::SACSegmentation<PointT> seg; 
-    pcl::ModelCoefficients::Ptr coefficients {new pcl::ModelCoefficients}; // coefficients define what the plane is
+    // pcl::SACSegmentation<PointT> seg; 
+    // pcl::ModelCoefficients::Ptr coefficients {new pcl::ModelCoefficients}; // coefficients define what the plane is
     
-    seg.setOptimizeCoefficients(true); // if true, then try to get the best model
-    seg.setModelType (pcl::SACMODEL_PLANE); // telling you are looking for a plane model
-    seg.setMethodType (pcl::SAC_RANSAC); // telling that the way of looking is ransac - random sample concensus. RANSAC is the importnat algorithm that runs behind everything
-    seg.setMaxIterations (maxIterations);
-    seg.setDistanceThreshold (distanceThreshold);
+    // seg.setOptimizeCoefficients(true); // if true, then try to get the best model
+    // seg.setModelType (pcl::SACMODEL_PLANE); // telling you are looking for a plane model
+    // seg.setMethodType (pcl::SAC_RANSAC); // telling that the way of looking is ransac - random sample concensus. RANSAC is the importnat algorithm that runs behind everything
+    // seg.setMaxIterations (maxIterations);
+    // seg.setDistanceThreshold (distanceThreshold);
     
-    // Set the cloud and do the segmentation
-    seg.setInputCloud (cloud);
-    seg.segment (*inliers, *coefficients); 
+    // // Set the cloud and do the segmentation
+    // seg.setInputCloud (cloud);
+    // seg.segment (*inliers, *coefficients); 
     
 
     //* CODE USING MY OWN RANSAC ALGORITHM
-    // Segment<PointT> seg; 
-    // seg.Ransac(inliers, cloud, maxIterations, distanceThreshold); // slower than built-in function
+    Segment<PointT> seg; 
+    seg.Ransac(inliers, cloud, maxIterations, distanceThreshold); // slower than built-in function
 
     // manage possible errors
     if (inliers->indices.size () == 0) // didnt found any model that fits the data
