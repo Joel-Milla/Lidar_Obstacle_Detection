@@ -3,6 +3,7 @@
 #include <pcl/io/openni_grabber.h>
 #include <pcl/common/centroid.h>
 #include <pcl/common/transforms.h> // for transformPointCloud
+#include <pcl/tracking/kld_adaptive_particle_filter_omp.h>
 
 #include <pcl/visualization/cloud_viewer.h>
 #include <pcl/visualization/pcl_visualizer.h>
@@ -24,6 +25,10 @@
 
 #include <mutex>
 #include <thread>
+
+// Needed for tracking
+#include <pcl/tracking/kld_adaptive_particle_filter.h>
+
 
 using namespace pcl::tracking;
 using namespace std::chrono_literals;
@@ -217,7 +222,7 @@ main (int argc, char** argv)
 
 
   //Set all parameters for  KLDAdaptiveParticleFilterOMPTracker
-  tracker->setMaximumParticleNum (1000);
+  tracker->setMaximumParticleNum (1000)
   tracker->setDelta (0.99);
   tracker->setEpsilon (0.2);
   tracker->setBinSize (bin_size);
