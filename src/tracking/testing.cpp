@@ -222,7 +222,7 @@ main (int argc, char** argv)
 
 
   //Set all parameters for  KLDAdaptiveParticleFilterOMPTracker
-  tracker->setMaximumParticleNum (1000)
+  tracker->setMaximumParticleNum (1000);
   tracker->setDelta (0.99);
   tracker->setEpsilon (0.2);
   tracker->setBinSize (bin_size);

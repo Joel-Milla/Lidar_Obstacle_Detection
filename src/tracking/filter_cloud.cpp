@@ -5,6 +5,7 @@
 #include <boost/concept/detail/has_constraints.hpp>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
+#include <thread>
 
 void saveCluster(const pcl::PointCloud<pcl::PointXYZI>::Ptr& cluster) {
       pcl::io::savePCDFileASCII("../cyclist.pcd", *cluster);
@@ -56,25 +57,6 @@ std::pair<std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr>, pcl::PointCloud<pcl
     std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters = pointProcessorI->Clustering(segmentCloud.first, 0.55, 30, 600);
 
     return {cloudClusters, segmentCloud.second};
-
-    std::vector<Color> colors = {Color(1,0,0), Color(1,1,0), Color(0,0,1), Color(1,1,1)};
-    renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,1,0)); // render plane cloud
-    
-    //* STEP3. RENDER BOUNDING BOXES AROUND OBJECTS
-    for (std::size_t indx = 0; indx < cloudClusters.size(); indx++)
-    {
-        const pcl::PointCloud<pcl::PointXYZI>::Ptr& cluster = cloudClusters[indx];
-
-        renderPointCloud(viewer, cluster, "obstCloud" + std::to_string(indx),colors[indx % 4]);
-
-        // Apply bounding boxes surrounding the objects
-        Box box = pointProcessorI->BoundingBox(cluster);
-        // BoxQ boxQ = pointProcessorI->BoundingBoxQ(cluster);
-
-        // if (indx == 5) saveCluster(cluster);
-        renderBox(viewer, box, indx);
-        // renderBox(viewer, boxQ, indx);
-    }
 }
 
 void objectTracking(ProcessPointClouds<pcl::PointXYZI>* pointProcessorI, pcl::visualization::PCLVisualizer::Ptr& viewer, pcl::PointCloud<pcl::PointXYZI>::Ptr object_to_track,  std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters, typename pcl::PointCloud<pcl::PointXYZI>::Ptr plane) {
@@ -108,35 +90,39 @@ int main (int argc, char** argv)
 
     //* STREAM OF PCD
     ProcessPointClouds<pcl::PointXYZI>* pointProcessorI = new ProcessPointClouds<pcl::PointXYZI>();
-    std::vector<boost::filesystem::path> stream = pointProcessorI->streamPcd("/app/src/sensors/data/pcd/data_2"); // chronollogical order vector of all file names containing PCD. 
+    std::vector<std::filesystem::path> stream = pointProcessorI->streamPcd("/home/jalej/Documents/Learning/courses/Lidar_Obstacle_Detection/src/sensors/data/pcd/data_2"); // chronollogical order vector of all file names containing PCD. 
     auto streamIterator = stream.begin();
     pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloudI;
 
-    std::string name_file = (*streamIterator).string();
-    inputCloudI = pointProcessorI->loadPcd(name_file);
-    std::pair<std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr>, pcl::PointCloud<pcl::PointXYZI>::Ptr> clusters_plane = preProcessing(pointProcessorI, viewer, inputCloudI);
+    pcl::PointCloud<pcl::PointXYZI>::Ptr object_to_track = pointProcessorI->loadPcd("/home/jalej/Documents/Learning/courses/Lidar_Obstacle_Detection/src/tracking/cyclist.pcd");
 
-    pcl::PointCloud<pcl::PointXYZI>::Ptr object_to_track = pointProcessorI->loadPcd("/app/src/tracking/cyclist.pcd");
-
-    objectTracking(pointProcessorI, viewer, object_to_track, clusters_plane.first, clusters_plane.second);
+    // objectTracking(pointProcessorI, viewer, object_to_track, clusters_plane.first, clusters_plane.second);
+    // viewer->spin();
 
     while (!viewer->wasStopped ())
     {
+        // Clear viewer
+        viewer->removeAllPointClouds();
+        viewer->removeAllShapes();
 
-    // Clear viewer
-    // viewer->removeAllPointClouds();
-    // viewer->removeAllShapes();
+        //* Load pcd and run cloud preprocessing. We separate preprocessing and tracking. One is in charge of downsampling and separating objects from the plane
+        std::string name_file = (*streamIterator).string();
+        inputCloudI = pointProcessorI->loadPcd(name_file);
 
-    // Load pcd and run obstacle detection process
-    // std::string name_file = (*streamIterator).string();
-    // inputCloudI = pointProcessorI->loadPcd(name_file);
-    // objectTracking(pointProcessorI, viewer, inputCloudI);
-    // renderPointCloud(viewer, inputCloudI, name_file);
-        
-    // streamIterator++;
-    // if(streamIterator == stream.end())
-    //     streamIterator = stream.begin();
+        //* Pair that contains point cloud of (cluster of objects, plane)
+        std::pair<std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr>, pcl::PointCloud<pcl::PointXYZI>::Ptr> clusters_plane = preProcessing(pointProcessorI, viewer, inputCloudI);
 
-    viewer->spinOnce ();
+        objectTracking(pointProcessorI, viewer, object_to_track, clusters_plane.first, clusters_plane.second);
+        // renderPointCloud(viewer, inputCloudI, name_file);
+            
+        streamIterator++;
+        if(streamIterator == stream.end())
+            streamIterator = stream.begin();
+
+        viewer->getRenderWindow()->Render();
+        // Add a small delay to control frames
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
+
+    return 0;
 }

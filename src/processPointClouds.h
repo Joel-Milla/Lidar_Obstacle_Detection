@@ -4,6 +4,7 @@
 #define PROCESSPOINTCLOUDS_H_
 
 #include <cstddef>
+#include <filesystem>
 #include <pcl/io/pcd_io.h>
 #include <pcl/common/common.h>
 #include <pcl/filters/extract_indices.h>
@@ -46,7 +47,7 @@ public:
 
     typename pcl::PointCloud<PointT>::Ptr loadPcd(std::string file);
 
-    std::vector<boost::filesystem::path> streamPcd(std::string dataPath);
+    std::vector<std::filesystem::path> streamPcd(std::string dataPath);
   
 };
 

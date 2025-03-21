@@ -7,6 +7,7 @@
 #include <chrono>
 #include <iostream>
 #include <pcl/common/transforms.h>
+#include <Eigen/Eigenvalues> 
 
 /*
 Why need to include the segment.cpp and how does this not throw an error because of multiple declaration of same cpp file? 
@@ -408,13 +409,13 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::loadPcd(std::s
 
 
 template<typename PointT>
-std::vector<boost::filesystem::path> ProcessPointClouds<PointT>::streamPcd(std::string dataPath)
+std::vector<std::filesystem::path> ProcessPointClouds<PointT>::streamPcd(std::string dataPath)
 {
 
-    std::vector<boost::filesystem::path> paths(boost::filesystem::directory_iterator{dataPath}, boost::filesystem::directory_iterator{});
+    std::vector<std::filesystem::path> paths(std::filesystem::directory_iterator{dataPath}, std::filesystem::directory_iterator{});
 
     // sort files in accending order so playback is chronological
-    sort(paths.begin(), paths.end());
+    std::sort(paths.begin(), paths.end());
 
     return paths;
 

@@ -7,6 +7,7 @@
 #include "processPointClouds.h"
 // using templates for processPointClouds so also include .cpp to help linker
 #include "processPointClouds.cpp"
+#include <thread>
 
 
 std::vector<Car> initHighway(bool renderScene, pcl::visualization::PCLVisualizer::Ptr& viewer)
@@ -158,30 +159,38 @@ int main (int argc, char** argv)
 
     //* STREAM OF PCD
     ProcessPointClouds<pcl::PointXYZI>* pointProcessorI = new ProcessPointClouds<pcl::PointXYZI>();
-    std::vector<boost::filesystem::path> stream = pointProcessorI->streamPcd("../src/sensors/data/pcd/data_2"); // chronollogical order vector of all file names containing PCD. 
+    std::vector<std::filesystem::path> stream = pointProcessorI->streamPcd("../src/sensors/data/pcd/data_2"); // chronollogical order vector of all file names containing PCD. 
     auto streamIterator = stream.begin();
     pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloudI;
 
     // inputCloudI = pointProcessorI->loadPcd("../src/sensors/data/pcd/data_1/0000000000.pcd");
     // cityBlock(pointProcessorI, viewer, inputCloudI);
 
-    while (!viewer->wasStopped ())
+    while (!viewer->wasStopped())
     {
-
-    // Clear viewer
-    viewer->removeAllPointClouds();
-    viewer->removeAllShapes();
-
-    // Load pcd and run obstacle detection process
-    std::string name_file = (*streamIterator).string();
-    inputCloudI = pointProcessorI->loadPcd(name_file);
-    // cityBlock(pointProcessorI, viewer, inputCloudI);
-    renderPointCloud(viewer, inputCloudI, name_file);
         
-    streamIterator++;
-    if(streamIterator == stream.end())
-        streamIterator = stream.begin();
-
-    viewer->spinOnce ();
+        // Clear viewer
+        viewer->removeAllPointClouds();
+        viewer->removeAllShapes();
+        
+        // Load pcd and run obstacle detection process
+        std::string name_file = (*streamIterator).string();
+        inputCloudI = pointProcessorI->loadPcd(name_file);
+        cityBlock(pointProcessorI, viewer, inputCloudI);
+        // renderPointCloud(viewer, inputCloudI, name_file);
+        
+        streamIterator++;
+        if(streamIterator == stream.end())
+            streamIterator = stream.begin();
+    
+        /*
+        So spin is like an infinite loop. when it starts, it will freeze in that line of code, and run infinite loop that is in charge of showing the viewer and begin able to resize viewer screen, etc. and stops when you close the window, like hitting 'q'. 
+        The spinOnce is like spin but just one iteration, freezed the code and then continues with the code. can set the time
+        */
+        // viewer->spinOnce(100, true);
+        
+        viewer->getRenderWindow()->Render();
+        // Add a small delay to control frame rate
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }
