@@ -2,6 +2,7 @@
 
 #include "cluster.h"
 #include "pcl/PointIndices.h"
+#include <cstddef>
 #include <queue>
 #include <vector>
 
@@ -93,7 +94,7 @@ void EuclideanCluster<PointT>::euclideanCluster(std::vector<pcl::PointIndices> &
 	// std::bitset<input_cloud->points.size()> points_processed(0);
 	boost::dynamic_bitset<> points_processed(input_cloud->points.size());
 
-	for (auto point_indx = 0; point_indx < points.size(); point_indx++) {
+	for (std::size_t point_indx = 0; point_indx < points.size(); point_indx++) {
 		bool point_processed = points_processed.test(point_indx);
 
 		if (point_processed)
@@ -114,7 +115,7 @@ void EuclideanCluster<PointT>::euclideanCluster(std::vector<pcl::PointIndices> &
 	* @return template <typename PointT> void 
 	*/
 template <typename PointT>
-void EuclideanCluster<PointT>::setMaxClusterSize(int max_size) {
+void EuclideanCluster<PointT>::setMaxClusterSize(std::size_t max_size) {
 	max_cluster_size = max_size;
 }
 
@@ -125,6 +126,6 @@ void EuclideanCluster<PointT>::setMaxClusterSize(int max_size) {
 	* @return template <typename PointT> void 
 	*/
 template <typename PointT>
-void EuclideanCluster<PointT>::setMinClusterSize(int min_size) {
+void EuclideanCluster<PointT>::setMinClusterSize(std::size_t min_size) {
 	min_cluster_size = min_size;
 }

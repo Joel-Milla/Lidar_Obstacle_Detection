@@ -1,4 +1,4 @@
-/* \author Aaron Brown */
+/* \author Joel Milla */
 // Create simple 3d highway enviroment using PCL
 // for exploring self-driving car sensors
 
@@ -81,10 +81,13 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
     }
 }
 
-/*
-Function:
-In charge of rendering the complete city block, which is a more advance environment than previous function
-*/
+/**
+ * @brief Function in charge of rendering the result of preprocessing for object detection
+ * 
+ * @param pointProcessorI object that has all the methods for processing the point cloud (like segmenting, clustering, etc)
+ * @param viewer The viewer which is in charge of rendering the points
+ * @param inputCloud The input cloud which the preprocessing will be applied to
+ */
 void cityBlock(ProcessPointClouds<pcl::PointXYZI>* pointProcessorI, pcl::visualization::PCLVisualizer::Ptr& viewer, const pcl::PointCloud<pcl::PointXYZI>::Ptr& inputCloud) {
     // Obtain roof points' cloud, and its indices
     std::pair<typename pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointIndices::Ptr> roof = pointProcessorI->ObtainRoofPoints(inputCloud);
@@ -103,7 +106,7 @@ void cityBlock(ProcessPointClouds<pcl::PointXYZI>* pointProcessorI, pcl::visuali
     renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,1,0)); // render plane cloud
     
     //* STEP3. RENDER BOUNDING BOXES AROUND OBJECTS
-    for (auto indx = 0; indx < cloudClusters.size(); indx++)
+    for (std::size_t indx = 0; indx < cloudClusters.size(); indx++)
     {
         const pcl::PointCloud<pcl::PointXYZI>::Ptr& cluster = cloudClusters[indx];
 
@@ -118,6 +121,7 @@ void cityBlock(ProcessPointClouds<pcl::PointXYZI>* pointProcessorI, pcl::visuali
     }
 
 }
+
 
 //setAngle: SWITCH CAMERA ANGLE {XY, TopDown, Side, FPS}
 void initCamera(CameraAngle setAngle, pcl::visualization::PCLVisualizer::Ptr& viewer)
@@ -154,7 +158,7 @@ int main (int argc, char** argv)
 
     //* STREAM OF PCD
     ProcessPointClouds<pcl::PointXYZI>* pointProcessorI = new ProcessPointClouds<pcl::PointXYZI>();
-    std::vector<boost::filesystem::path> stream = pointProcessorI->streamPcd("../src/sensors/data/pcd/data_1"); // chronollogical order vector of all file names containing PCD. 
+    std::vector<boost::filesystem::path> stream = pointProcessorI->streamPcd("../src/sensors/data/pcd/data_2"); // chronollogical order vector of all file names containing PCD. 
     auto streamIterator = stream.begin();
     pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloudI;
 
@@ -171,8 +175,8 @@ int main (int argc, char** argv)
     // Load pcd and run obstacle detection process
     std::string name_file = (*streamIterator).string();
     inputCloudI = pointProcessorI->loadPcd(name_file);
-    cityBlock(pointProcessorI, viewer, inputCloudI);
-    // renderPointCloud(viewer, inputCloudI, name_file);
+    // cityBlock(pointProcessorI, viewer, inputCloudI);
+    renderPointCloud(viewer, inputCloudI, name_file);
         
     streamIterator++;
     if(streamIterator == stream.end())

@@ -1,4 +1,5 @@
 #include "segment.h"
+#include <cstddef>
 
 template<typename PointT>
 Segment<PointT>::Segment() {}
@@ -45,7 +46,7 @@ void Segment<PointT>::Ransac(pcl::PointIndices::Ptr inliers, typename pcl::Point
 		long long int D = -1 * ((A * point1.x) + (B * point1.y) + (C * point1.z));
 
 		// Measure distance between every point and fit line
-		for (int indx = 0; indx < cloud->points.size(); indx++) {
+		for (std::size_t indx = 0; indx < cloud->points.size(); indx++) {
 			const PointT& point = cloud->points[indx];
 			float x = point.x;
 			float y = point.y;
