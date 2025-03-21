@@ -76,6 +76,10 @@ void gridSampleApprox (const CloudConstPtr &cloud, Cloud &result, double leaf_si
 bool
 drawParticles (pcl::visualization::PCLVisualizer& viz)
 {
+  /*
+  In drawParticles function, you can get particles’s positions by calling getParticles().
+  */
+  
   ParticleFilter::PointCloudStatePtr particles = tracker_->getParticles ();
   if (particles && new_cloud_)
   {
@@ -110,6 +114,9 @@ drawParticles (pcl::visualization::PCLVisualizer& viz)
 void
 drawResult (pcl::visualization::PCLVisualizer& viz)
 {
+  /*
+  In drawResult function, you can get model information about position and rotation.
+  */
   ParticleXYZRPY result = tracker_->getResult ();
   Eigen::Affine3f transformation = tracker_->toEigenMatrix (result);
 
@@ -132,12 +139,11 @@ void
 viz_cb (pcl::visualization::PCLVisualizer& viz)
 {
   std::lock_guard<std::mutex> lock (mtx_);
-    
-  if (!cloud_pass_)
-    {
+
+  if (!cloud_pass_) {
       std::this_thread::sleep_for(1s);
       return;
-   }
+  }
 
   //Draw downsampled point cloud from sensor    
   if (new_cloud_ && cloud_pass_downsampled_)
@@ -167,6 +173,9 @@ cloud_cb (const CloudConstPtr &cloud)
   filterPassThrough (cloud, *cloud_pass_);
   gridSampleApprox (cloud_pass_, *cloud_pass_downsampled_, downsampling_grid_size_);
 
+  /* 
+  Until the counter variable become equal to 10, we ignore the input point cloud, because the point cloud at first few frames often have noise. After counter variable reach to 10 frame, at each loop, we set downsampled input point cloud to tracker and the tracker will compute particles movement.
+  */
   if(counter < 10){
 	counter++;
   }else{
@@ -221,6 +230,9 @@ main (int argc, char** argv)
   bin_size.yaw = 0.1f;
 
 
+  /*
+  First, in main function, these lines set the parameters for tracking.
+  */
   //Set all parameters for  KLDAdaptiveParticleFilterOMPTracker
   tracker->setMaximumParticleNum (1000);
   tracker->setDelta (0.99);
@@ -239,6 +251,9 @@ main (int argc, char** argv)
   tracker_->setUseNormal (false);
 
 
+  /*
+  Here, we set likelihood function which tracker use when calculate weights. You can add more likelihood function as you like. By default, there are normals likelihood and color likelihood functions. When you want to add other likelihood function, all you have to do is initialize new Coherence Class and add the Coherence instance to coherence variable with addPointCoherence function.
+  */
   //Setup coherence object for tracking
   ApproxNearestPairPointCloudCoherence<RefPointType>::Ptr coherence
     (new ApproxNearestPairPointCloudCoherence<RefPointType>);
@@ -253,6 +268,9 @@ main (int argc, char** argv)
 
   tracker_->setCloudCoherence (coherence);
 
+  /*
+  In this part, we set the point cloud loaded from pcd file as reference model to tracker and also set model’s transform values.
+  */
   //prepare the model of tracker's target
   Eigen::Vector4f c;
   Eigen::Affine3f trans = Eigen::Affine3f::Identity ();
@@ -260,8 +278,11 @@ main (int argc, char** argv)
   CloudPtr transed_ref_downsampled (new Cloud);
 
   pcl::compute3DCentroid<RefPointType> (*target_cloud, c);
+
   trans.translation ().matrix () = Eigen::Vector3f (c[0], c[1], c[2]);
+
   pcl::transformPointCloud<RefPointType> (*target_cloud, *transed_ref, trans.inverse());
+
   gridSampleApprox (transed_ref, *transed_ref_downsampled, downsampling_grid_size_);
 
   //set reference model and trans
