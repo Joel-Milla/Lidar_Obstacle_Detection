@@ -43,9 +43,6 @@ void initCamera(CameraAngle setAngle, pcl::visualization::PCLVisualizer::Ptr& vi
  * @return std::pair<std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr>, pcl::PointCloud<pcl::PointXYZI>::Ptr> -> 1. vector of objects, 2. Plane
  */
 std::pair<std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr>, pcl::PointCloud<pcl::PointXYZI>::Ptr> preProcessing(ProcessPointClouds<pcl::PointXYZI>* pointProcessorI, pcl::visualization::PCLVisualizer::Ptr& viewer, const pcl::PointCloud<pcl::PointXYZI>::Ptr& inputCloud) {
-    // Obtain roof points' cloud, and its indices
-    std::pair<typename pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointIndices::Ptr> roof = pointProcessorI->ObtainRoofPoints(inputCloud);
-
     // Apply filter cloud to downsample the amount of data in PCD for faster data management by applying voxel grid, then use cropbox to reduce field of view just near the car, after that remove roof points.s
     typename pcl::PointCloud<pcl::PointXYZI>::Ptr filterCloud = pointProcessorI->FilterCloud(inputCloud, 0.15 , Eigen::Vector4f (-10, -10, -10, 1), Eigen::Vector4f ( 26, 10, 10, 1));
 
@@ -74,9 +71,10 @@ void objectTracking(ProcessPointClouds<pcl::PointXYZI>* pointProcessorI, pcl::vi
         Box box = pointProcessorI->BoundingBox(cluster);
         // BoxQ boxQ = pointProcessorI->BoundingBoxQ(cluster);
 
-        if (indx == 5)
-            saveCluster(cluster);
-        renderBox(viewer, box, indx);
+        if (indx == 1) {
+            // saveCluster(cluster);
+            renderBox(viewer, box, indx);
+        }
         // renderBox(viewer, boxQ, indx);
     }
 }
@@ -91,7 +89,7 @@ int main (int argc, char** argv)
     //* STREAM OF PCD
     ProcessPointClouds<pcl::PointXYZI>* pointProcessorI = new ProcessPointClouds<pcl::PointXYZI>();
     std::vector<std::filesystem::path> stream = pointProcessorI->streamPcd("/home/jalej/Documents/Learning/courses/Lidar_Obstacle_Detection/src/sensors/data/pcd/data_2"); // chronollogical order vector of all file names containing PCD. 
-    auto streamIterator = stream.begin();
+    auto streamIterator = stream.begin() + 50;
     pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloudI;
 
     pcl::PointCloud<pcl::PointXYZI>::Ptr object_to_track = pointProcessorI->loadPcd("/home/jalej/Documents/Learning/courses/Lidar_Obstacle_Detection/src/tracking/cyclist.pcd");
@@ -114,6 +112,7 @@ int main (int argc, char** argv)
 
         objectTracking(pointProcessorI, viewer, object_to_track, clusters_plane.first, clusters_plane.second);
         // renderPointCloud(viewer, inputCloudI, name_file);
+        viewer->spin();
             
         streamIterator++;
         if(streamIterator == stream.end())

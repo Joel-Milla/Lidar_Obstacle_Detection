@@ -16,6 +16,6 @@ link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 list(REMOVE_ITEM PCL_LIBRARIES "vtkproj4")
 
-add_executable (track filter_cloud.cpp ../render/render.cpp ../processPointClouds.cpp)
-# add_executable(track testing.cpp)
+# add_executable (track filter_cloud.cpp ../render/render.cpp ../processPointClouds.cpp)
+add_executable(track testing.cpp ../processPointClouds.cpp ../helper/segment.cpp ../helper/cluster.cpp ../render/render.cpp)
 target_link_libraries (track ${PCL_LIBRARIES})

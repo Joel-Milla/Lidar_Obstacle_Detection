@@ -1,3 +1,5 @@
+#include <filesystem>
+#include <pcl/impl/point_types.hpp>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/io/openni_grabber.h>
@@ -26,6 +28,11 @@
 #include <mutex>
 #include <thread>
 
+#include "../processPointClouds.h"
+// using templates for processPointClouds so also include .cpp to help linker
+#include "../processPointClouds.cpp"
+#include "../render/render.h"
+
 // Needed for tracking
 #include <pcl/tracking/kld_adaptive_particle_filter.h>
 
@@ -40,9 +47,7 @@ typedef Cloud::Ptr CloudPtr;
 typedef Cloud::ConstPtr CloudConstPtr;
 typedef ParticleFilterTracker<RefPointType, ParticleT> ParticleFilter;
 
-CloudPtr cloud_pass_;
-CloudPtr cloud_pass_downsampled_;
-CloudPtr target_cloud;
+pcl::PointCloud<pcl::PointXYZI>::Ptr target_cloud;
 
 std::mutex mtx_;
 ParticleFilter::Ptr tracker_;
@@ -71,138 +76,93 @@ void gridSampleApprox (const CloudConstPtr &cloud, Cloud &result, double leaf_si
   grid.filter (result);
 }
 
+void renderPointTracking(pcl::visualization::PCLVisualizer::Ptr& viewer, const CloudPtr& cloud, std::string name) {
+  // Select color based off input value
+  viewer->addPointCloud<pcl::PointXYZRGBA> (cloud, "input cloud");
+  viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_COLOR, 0, 1, 0, "input cloud");
+	viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "input cloud");
 
-//Draw the current particles
-bool
-drawParticles (pcl::visualization::PCLVisualizer& viz)
-{
-  /*
-  In drawParticles function, you can get particles’s positions by calling getParticles().
-  */
-  
+  //* Render particles
+  // ParticleXYZRPY result = tracker_->getResult ();
+  tracker_->setInputCloud (cloud);
+  tracker_->compute ();
+
   ParticleFilter::PointCloudStatePtr particles = tracker_->getParticles ();
-  if (particles && new_cloud_)
-  {
-      //Set pointCloud with particle's points
-      pcl::PointCloud<pcl::PointXYZ>::Ptr particle_cloud (new pcl::PointCloud<pcl::PointXYZ> ());
-    for (const auto& particle: *particles)
-	{
-	  pcl::PointXYZ point;
-          
-	  point.x = particle.x;
-	  point.y = particle.y;
-	  point.z = particle.z;
-	  particle_cloud->push_back (point);
-	}
+  std::cout << particles << std::endl;
 
-      //Draw red particles 
-      {
-	pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> red_color (particle_cloud, 250, 99, 71);
-
-	if (!viz.updatePointCloud (particle_cloud, red_color, "particle cloud"))
-	  viz.addPointCloud (particle_cloud, red_color, "particle cloud");
-      }
-      return true;
+  if (particles) {
+    std::cout << "Got particles!" << std::endl;
+    //Set pointCloud with particle's points
+    pcl::PointCloud<pcl::PointXYZ>::Ptr particle_cloud (new pcl::PointCloud<pcl::PointXYZ> ());
+    for (const auto& particle: *particles) {
+      pcl::PointXYZ point;
+            
+      point.x = particle.x;
+      point.y = particle.y;
+      point.z = particle.z;
+      particle_cloud->push_back (point);
     }
-  else
-    {
-      return false;
+    // Create a color handler
+    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> red_color(particle_cloud, 255, 0, 0);
+
+    // Try update first, add only if needed
+    if (!viewer->updatePointCloud(particle_cloud, red_color, "particles")) {
+        viewer->addPointCloud(particle_cloud, red_color, "particles");
     }
-}
-
-//Draw model reference point cloud
-void
-drawResult (pcl::visualization::PCLVisualizer& viz)
-{
-  /*
-  In drawResult function, you can get model information about position and rotation.
-  */
-  ParticleXYZRPY result = tracker_->getResult ();
-  Eigen::Affine3f transformation = tracker_->toEigenMatrix (result);
-
-  //move close to camera a little for better visualization
-  transformation.translation () += Eigen::Vector3f (0.0f, 0.0f, -0.005f);
-  CloudPtr result_cloud (new Cloud ());
-  pcl::transformPointCloud<RefPointType> (*(tracker_->getReferenceCloud ()), *result_cloud, transformation);
-
-  //Draw blue model reference point cloud
-  {
-    pcl::visualization::PointCloudColorHandlerCustom<RefPointType> blue_color (result_cloud, 0, 0, 255);
-
-    if (!viz.updatePointCloud (result_cloud, blue_color, "resultcloud"))
-      viz.addPointCloud (result_cloud, blue_color, "resultcloud");
-  }
-}
-
-//visualization's callback function
-void
-viz_cb (pcl::visualization::PCLVisualizer& viz)
-{
-  std::lock_guard<std::mutex> lock (mtx_);
-
-  if (!cloud_pass_) {
-      std::this_thread::sleep_for(1s);
-      return;
-  }
-
-  //Draw downsampled point cloud from sensor    
-  if (new_cloud_ && cloud_pass_downsampled_)
-    {
-      CloudPtr cloud_pass;
-      cloud_pass = cloud_pass_downsampled_;
     
-      if (!viz.updatePointCloud (cloud_pass, "cloudpass"))
-	{
-	  viz.addPointCloud (cloud_pass, "cloudpass");
-	  viz.resetCameraViewpoint ("cloudpass");
-	}
-      bool ret = drawParticles (viz);
-      if (ret)
-        drawResult (viz);
+    // Set size separately (this still makes sense as a separate call)
+    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "particles");
+
+    ParticleXYZRPY result = tracker_->getResult ();
+    Eigen::Affine3f transformation = tracker_->toEigenMatrix (result);
+
+    //move close to camera a little for better visualization
+    transformation.translation () += Eigen::Vector3f (0.0f, 0.0f, -0.005f);
+    CloudPtr result_cloud (new Cloud ());
+    pcl::transformPointCloud<RefPointType> (*(tracker_->getReferenceCloud ()), *result_cloud, transformation);
+
+    //Draw blue model reference point cloud
+    {
+      pcl::visualization::PointCloudColorHandlerCustom<RefPointType> blue_color (result_cloud, 0, 0, 255);
+
+      if (!viewer->updatePointCloud (result_cloud, blue_color, "resultcloud"))
+        viewer->addPointCloud (result_cloud, blue_color, "resultcloud");
     }
-  new_cloud_ = false;
+  }
 }
 
-//OpenNI Grabber's cloud Callback function
-void
-cloud_cb (const CloudConstPtr &cloud)
-{
-  std::lock_guard<std::mutex> lock (mtx_);
-  cloud_pass_.reset (new Cloud);
-  cloud_pass_downsampled_.reset (new Cloud);
-  filterPassThrough (cloud, *cloud_pass_);
-  gridSampleApprox (cloud_pass_, *cloud_pass_downsampled_, downsampling_grid_size_);
 
-  /* 
-  Until the counter variable become equal to 10, we ignore the input point cloud, because the point cloud at first few frames often have noise. After counter variable reach to 10 frame, at each loop, we set downsampled input point cloud to tracker and the tracker will compute particles movement.
-  */
-  if(counter < 10){
-	counter++;
-  }else{
-  	//Track the object
-	tracker_->setInputCloud (cloud_pass_downsampled_);
-	tracker_->compute ();
-	new_cloud_ = true;
-  }
+//setAngle: SWITCH CAMERA ANGLE {XY, TopDown, Side, FPS}
+void initCamera(CameraAngle setAngle, pcl::visualization::PCLVisualizer::Ptr& viewer)
+{
+
+    viewer->setBackgroundColor (0, 0, 0);
+    
+    // set camera position and angle
+    viewer->initCameraParameters();
+    // distance away in meters
+    int distance = 16;
+    
+    switch(setAngle)
+    {
+        case XY : viewer->setCameraPosition(-distance, -distance, distance, 1, 1, 0); break;
+        case TopDown : viewer->setCameraPosition(0, 0, distance, 1, 0, 1); break;
+        case Side : viewer->setCameraPosition(0, -distance, 0, 0, 0, 1); break;
+        case FPS : viewer->setCameraPosition(-7, 0, 0, 0, 0, 1);
+    }
+
+    if(setAngle!=FPS)
+        viewer->addCoordinateSystem (1.0);
 }
 
 int
-main (int argc, char** argv)
-{
-  if (argc < 3)
-    {
-      PCL_WARN("Please set device_id pcd_filename(e.g. $ %s '#1' sample.pcd)\n", argv[0]);
-      exit (1);
-    }
-
+main (int argc, char** argv) {
   //read pcd file
-  target_cloud.reset(new Cloud());
-  if(pcl::io::loadPCDFile (argv[2], *target_cloud) == -1){
-    std::cout << "pcd file not found" << std::endl;
-    exit(-1);
-  }
-
-  std::string device_id = std::string (argv[1]);  
+  ProcessPointClouds<pcl::PointXYZRGBA>* pointProcessorI = new ProcessPointClouds<pcl::PointXYZRGBA>();
+  CloudPtr target_cloud;
+  
+  std::string name_file = "/home/jalej/Documents/Learning/courses/Lidar_Obstacle_Detection/src/tracking/cyclist.pcd";
+  target_cloud = pointProcessorI->loadPcd(name_file);
 
   counter = 0;
 
@@ -289,17 +249,38 @@ main (int argc, char** argv)
   tracker_->setReferenceCloud (transed_ref_downsampled);
   tracker_->setTrans (trans);
 
-  //Setup OpenNIGrabber and viewer
-  pcl::visualization::CloudViewer* viewer_ = new pcl::visualization::CloudViewer("PCL OpenNI Tracking Viewer");
-  pcl::Grabber* interface = new pcl::OpenNIGrabber (device_id);
-  std::function<void (const CloudConstPtr&)> f = cloud_cb;
-  interface->registerCallback (f);
+  pcl::visualization::PCLVisualizer::Ptr viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
+  CameraAngle setAngle = FPS;
+  initCamera(setAngle, viewer);
 
-  viewer_->runOnVisualizationThread (viz_cb, "viz_cb");
+  //* STREAM OF PCD
+  std::vector<std::filesystem::path> stream = pointProcessorI->streamPcd("/home/jalej/Documents/Learning/courses/Lidar_Obstacle_Detection/src/sensors/data/pcd/data_2"); // chronollogical order vector of all file names containing PCD. 
+  auto streamIterator = stream.begin() + 50;
+  CloudPtr inputCloudI;
 
-  //Start viewer and object tracking
-  interface->start();
-  while (!viewer_->wasStopped ())
-    std::this_thread::sleep_for(1s);
-  interface->stop();
+  while (!viewer->wasStopped ())
+  {
+      // Clear viewer
+      viewer->removeAllPointClouds();
+      viewer->removeAllShapes();
+
+      //* Load pcd and run cloud preprocessing. We separate preprocessing and tracking. One is in charge of downsampling and separating objects from the plane
+      std::string name_file = (*streamIterator).string();
+      inputCloudI = pointProcessorI->loadPcd(name_file);
+
+      //* Pair that contains point cloud of (cluster of objects, plane)
+      // std::pair<std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr>, pcl::PointCloud<pcl::PointXYZI>::Ptr> clusters_plane = preProcessing(pointProcessorI, viewer, inputCloudI);
+
+      // objectTracking(pointProcessorI, viewer, object_to_track, clusters_plane.first, clusters_plane.second);
+      renderPointTracking(viewer, inputCloudI, name_file);
+      // viewer->spin();
+            
+      streamIterator++;
+      if(streamIterator == stream.end())
+          streamIterator = stream.begin();
+
+      viewer->getRenderWindow()->Render();
+      // Add a small delay to control frames
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
 }
