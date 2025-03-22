@@ -57,14 +57,13 @@ int counter;
 
 
 //Filter along a specified dimension
-void filterPassThrough (const CloudConstPtr &cloud, Cloud &result)
-{
+void filterPassThrough(const CloudConstPtr &cloud, Cloud &result) {
   pcl::PassThrough<pcl::PointXYZRGBA> pass;
-  pass.setFilterFieldName ("z");
-  pass.setFilterLimits (0.0, 10.0);
-  pass.setKeepOrganized (false);
-  pass.setInputCloud (cloud);
-  pass.filter (result);
+  pass.setFilterFieldName("z");
+  pass.setFilterLimits(-5.0, 20.0);  // Wider range (-5m to 20m instead of 0-10m)
+  pass.setKeepOrganized(false);
+  pass.setInputCloud(cloud);
+  pass.filter(result);
 }
 
 
@@ -170,10 +169,11 @@ main (int argc, char** argv) {
   new_cloud_  = false;
   downsampling_grid_size_ =  0.002;
 
-  std::vector<double> default_step_covariance = std::vector<double> (6, 0.015 * 0.015);
-  default_step_covariance[3] *= 40.0;
-  default_step_covariance[4] *= 40.0;
-  default_step_covariance[5] *= 40.0;
+  std::vector<double> default_step_covariance = std::vector<double>(6, 0.05 * 0.05);  // Was 0.015 * 0.015
+  default_step_covariance[3] *= 40.0;  // Roll
+  default_step_covariance[4] *= 40.0;  // Pitch
+  default_step_covariance[5] *= 40.0;  // Yaw
+  
 
   std::vector<double> initial_noise_covariance = std::vector<double> (6, 0.00001);
   std::vector<double> default_initial_mean = std::vector<double> (6, 0.0);
@@ -217,14 +217,14 @@ main (int argc, char** argv) {
   //Setup coherence object for tracking
   ApproxNearestPairPointCloudCoherence<RefPointType>::Ptr coherence
     (new ApproxNearestPairPointCloudCoherence<RefPointType>);
-
+  
   DistanceCoherence<RefPointType>::Ptr distance_coherence
     (new DistanceCoherence<RefPointType>);
   coherence->addPointCoherence (distance_coherence);
 
   pcl::search::Octree<RefPointType>::Ptr search (new pcl::search::Octree<RefPointType> (0.01));
   coherence->setSearchMethod (search);
-  coherence->setMaximumDistance (0.01);
+  coherence->setMaximumDistance(0.05);
 
   tracker_->setCloudCoherence (coherence);
 

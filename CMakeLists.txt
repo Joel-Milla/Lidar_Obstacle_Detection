@@ -8,7 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CXX_FLAGS "-Wall")
 set(CMAKE_CXX_FLAGS "${CXX_FLAGS}")
 
-project(playback)
+project(pcl)
 
 find_package(PCL 1.12 REQUIRED)
 
@@ -19,5 +19,8 @@ list(REMOVE_ITEM PCL_LIBRARIES "vtkproj4")
 
 
 # add_executable (environment src/environment.cpp src/render/render.cpp src/processPointClouds.cpp src/quiz/cluster/cluster.cpp src/quiz/cluster/kdtree.cpp src/helper/kdtree.cpp) # Remove the cpps that are inside quiz
-add_executable (environment src/environment.cpp src/render/render.cpp src/processPointClouds.cpp src/helper/cluster.cpp src/helper/kdtree.cpp src/helper/segment.cpp)
-target_link_libraries (environment ${PCL_LIBRARIES})
+# add_executable (tracking src/tracking.cpp src/render/render.cpp src/processPointClouds.cpp src/helper/cluster.cpp src/helper/kdtree.cpp src/helper/segment.cpp)
+# target_link_libraries (environment ${PCL_LIBRARIES})
+
+add_executable (tracking src/tracking.cpp src/render/render.cpp src/processPointClouds.cpp src/helper/cluster.cpp src/helper/kdtree.cpp src/helper/segment.cpp)
+target_link_libraries (tracking ${PCL_LIBRARIES})

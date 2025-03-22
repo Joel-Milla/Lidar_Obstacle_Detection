@@ -118,17 +118,17 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(ty
 
     //* DOWNSAMPLE THE DATA (VOXEL GRID)
     // Create the filtering object 
-    // typename pcl::PointCloud<PointT>::Ptr cloud_filtered (new pcl::PointCloud<PointT> ());
-    // pcl::VoxelGrid<PointT> sor;
-    // sor.setInputCloud (cloud);
-    // sor.setLeafSize (filterRes, filterRes, filterRes);
-    // sor.filter (*cloud_filtered);
+    typename pcl::PointCloud<PointT>::Ptr cloud_filtered (new pcl::PointCloud<PointT> ());
+    pcl::VoxelGrid<PointT> sor;
+    sor.setInputCloud (cloud);
+    sor.setLeafSize (filterRes, filterRes, filterRes);
+    sor.filter (*cloud_filtered);
 
     //* CROPBOX FOR SELECTING REGION OF INTEREST
     // cropbox receives dimensions and returns the cloud points that reside inside that dimensions
     typename pcl::PointCloud<PointT>::Ptr cloud_cropbox (new pcl::PointCloud<PointT>());
     pcl::CropBox<PointT> cropBoxFilter (true);
-    cropBoxFilter.setInputCloud (cloud);
+    cropBoxFilter.setInputCloud (cloud_filtered);
 
     // Cropbox slighlty bigger then bounding box of points
     cropBoxFilter.setMin (minPoint);
