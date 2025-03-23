@@ -200,23 +200,23 @@ std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT
 	pcl::PointIndices::Ptr inliers {new pcl::PointIndices}; // ptr to the inliers
     
     //* CODE USING PCL BUILTIN RANSAC
-    pcl::SACSegmentation<PointT> seg; 
-    pcl::ModelCoefficients::Ptr coefficients {new pcl::ModelCoefficients}; // coefficients define what the plane is
+    // pcl::SACSegmentation<PointT> seg; 
+    // pcl::ModelCoefficients::Ptr coefficients {new pcl::ModelCoefficients}; // coefficients define what the plane is
     
-    seg.setOptimizeCoefficients(true); // if true, then try to get the best model
-    seg.setModelType (pcl::SACMODEL_PLANE); // telling you are looking for a plane model
-    seg.setMethodType (pcl::SAC_RANSAC); // telling that the way of looking is ransac - random sample concensus. RANSAC is the importnat algorithm that runs behind everything
-    seg.setMaxIterations (maxIterations);
-    seg.setDistanceThreshold (distanceThreshold);
+    // seg.setOptimizeCoefficients(true); // if true, then try to get the best model
+    // seg.setModelType (pcl::SACMODEL_PLANE); // telling you are looking for a plane model
+    // seg.setMethodType (pcl::SAC_RANSAC); // telling that the way of looking is ransac - random sample concensus. RANSAC is the importnat algorithm that runs behind everything
+    // seg.setMaxIterations (maxIterations);
+    // seg.setDistanceThreshold (distanceThreshold);
     
-    // Set the cloud and do the segmentation
-    seg.setInputCloud (cloud);
-    seg.segment (*inliers, *coefficients); 
+    // // Set the cloud and do the segmentation
+    // seg.setInputCloud (cloud);
+    // seg.segment (*inliers, *coefficients); 
     
 
     //* CODE USING MY OWN RANSAC ALGORITHM
-    // Segment<PointT> seg; 
-    // seg.Ransac(inliers, cloud, maxIterations, distanceThreshold); // slower than built-in function
+    Segment<PointT> seg; 
+    seg.Ransac(inliers, cloud, maxIterations, distanceThreshold); // slower than built-in function
 
     // manage possible errors
     if (inliers->indices.size () == 0) // didnt found any model that fits the data
@@ -260,26 +260,26 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
     std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
 
     //* PCL TREE AND CLUSTERING IMPLEMENTATION
-    // Creating the KdTree object for the search method of the extraction
-    typename pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
-    tree->setInputCloud (cloud);
+    // // Creating the KdTree object for the search method of the extraction
+    // typename pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
+    // tree->setInputCloud (cloud);
 
-    // Extracting all the different clusters and saving their indices of each cluster. PointIndices is a vector of indices
-    pcl::EuclideanClusterExtraction<PointT> ec;
-    ec.setClusterTolerance(cluster_tolerance); // value to low will create many clusters from one object, value to high multiple objects as one cluster.
-    ec.setMinClusterSize(min_size);
-    ec.setMaxClusterSize(max_size);
-    ec.setSearchMethod(tree); // Search clusters using kdtree
-    ec.setInputCloud(cloud);
-    ec.extract(clusters_indices);
+    // // Extracting all the different clusters and saving their indices of each cluster. PointIndices is a vector of indices
+    // pcl::EuclideanClusterExtraction<PointT> ec;
+    // ec.setClusterTolerance(cluster_tolerance); // value to low will create many clusters from one object, value to high multiple objects as one cluster.
+    // ec.setMinClusterSize(min_size);
+    // ec.setMaxClusterSize(max_size);
+    // ec.setSearchMethod(tree); // Search clusters using kdtree
+    // ec.setInputCloud(cloud);
+    // ec.extract(clusters_indices);
 
 
     //* MY OWN IMPLEMENTATION OF TREE AND CLUSTERING ALGORITHMS
-    // EuclideanCluster<PointT> clustering;
-    // clustering.setInputCloud(cloud, cluster_tolerance);
-    // clustering.setMinClusterSize(min_size);
-    // clustering.setMaxClusterSize(max_size);
-    // clustering.euclideanCluster(clusters_indices);
+    EuclideanCluster<PointT> clustering;
+    clustering.setInputCloud(cloud, cluster_tolerance);
+    clustering.setMinClusterSize(min_size);
+    clustering.setMaxClusterSize(max_size);
+    clustering.euclideanCluster(clusters_indices);
 
 
     // For each cluster, iterate through the indices and get the original points of the cloud

@@ -3,6 +3,7 @@
 // such as cars and the highway
 
 #include "render.h"
+#include <pcl/impl/point_types.hpp>
 
 void renderHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
 {
@@ -38,6 +39,19 @@ void clearRays(pcl::visualization::PCLVisualizer::Ptr& viewer)
 		countRays--;
 		viewer->removeShape("ray"+std::to_string(countRays));
 	}
+}
+
+void renderPointCloud(pcl::visualization::PCLVisualizer::Ptr& viewer, const typename pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, std::string name, Color color) {
+	// viewer->addPointCloud<pcl::PointXYZRGBA> (cloud, name);
+	// viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_COLOR, color.r, color.g, color.b, name);
+	
+	// Create a color handler
+	pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> colorHandler(cloud, color.r*255, color.g*255, color.b*255);
+	// Try update first, add only if needed
+	if (!viewer->updatePointCloud(cloud, colorHandler, name)) {
+		viewer->addPointCloud(cloud, colorHandler, name);
+	}
+	viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, name);
 }
 
 void renderPointCloud(pcl::visualization::PCLVisualizer::Ptr& viewer, const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud, std::string name, Color color)

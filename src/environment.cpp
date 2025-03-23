@@ -159,7 +159,7 @@ int main (int argc, char** argv)
 
     //* STREAM OF PCD
     ProcessPointClouds<pcl::PointXYZI>* pointProcessorI = new ProcessPointClouds<pcl::PointXYZI>();
-    std::vector<std::filesystem::path> stream = pointProcessorI->streamPcd("../src/sensors/data/pcd/data_2"); // chronollogical order vector of all file names containing PCD. 
+    std::vector<std::filesystem::path> stream = pointProcessorI->streamPcd("../src/sensors/data/pcd/data_1"); // chronollogical order vector of all file names containing PCD. 
     auto streamIterator = stream.begin();
     pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloudI;
 
