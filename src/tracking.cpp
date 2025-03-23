@@ -4,6 +4,7 @@
 
 #include "processPointClouds.h"
 #include "render/render.h"
+// #include "render/render.cpp"
 // using templates for processPointClouds so also include .cpp to help linker
 #include "processPointClouds.cpp"
 #include <cstddef>
@@ -156,52 +157,50 @@ void processFirstFrame(ProcessPointClouds<pcl::PointXYZRGBA> *pointProcessorI,
     }
 }
 
+template <typename PointT>
+void renderPointCloud(pcl::visualization::PCLVisualizer::Ptr& viewer, const typename pcl::PointCloud<PointT>::Ptr& cloud, std::string name, Color color, double size) {
+	// viewer->addPointCloud<pcl::PointXYZRGBA> (cloud, name);
+	// viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_COLOR, color.r, color.g, color.b, name);
+	
+	// Create a color handler
+	pcl::visualization::PointCloudColorHandlerCustom<PointT> colorHandler(cloud, color.r*255, color.g*255, color.b*255);
+	// Try update first, add only if needed
+	if (!viewer->updatePointCloud(cloud, colorHandler, name)) {
+		viewer->addPointCloud(cloud, colorHandler, name);
+	}
+	viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, size, name);
+}
+
 void drawTrackedObject(pcl::visualization::PCLVisualizer::Ptr &viewer, const ParticleFilter::Ptr tracker_, const CloudPtr& cloud) {
     //* Render particles
     tracker_->setInputCloud (cloud);
     tracker_->compute ();
 
     ParticleFilter::PointCloudStatePtr particles = tracker_->getParticles ();
-    std::cout << particles << std::endl;
 
     if (particles) {
-    std::cout << "Got particles!" << std::endl;
-    //Set pointCloud with particle's points
-    pcl::PointCloud<pcl::PointXYZ>::Ptr particle_cloud (new pcl::PointCloud<pcl::PointXYZ> ());
-    for (const auto& particle: *particles) {
-        pcl::PointXYZ point;
-            
-        point.x = particle.x;
-        point.y = particle.y;
-        point.z = particle.z;
-        particle_cloud->push_back (point);
-    }
-    // Create a color handler
-    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> red_color(particle_cloud, 255, 0, 0);
+        //Set pointCloud with particle's points
+        pcl::PointCloud<pcl::PointXYZ>::Ptr particle_cloud (new pcl::PointCloud<pcl::PointXYZ> ());
+        for (const auto& particle: *particles) {
+            pcl::PointXYZ point;
+                
+            point.x = particle.x;
+            point.y = particle.y;
+            point.z = particle.z;
+            particle_cloud->push_back (point);
+        }
 
-    // Try update first, add only if needed
-    if (!viewer->updatePointCloud(particle_cloud, red_color, "particles")) {
-        viewer->addPointCloud(particle_cloud, red_color, "particles");
-    }
+        renderPointCloud<pcl::PointXYZ>(viewer, particle_cloud, "particles", Color(1,0,0), 3);
 
-    // Set size separately (this still makes sense as a separate call)
-    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "particles");
+        ParticleT result = tracker_->getResult ();
+        Eigen::Affine3f transformation = tracker_->toEigenMatrix (result);
 
-    ParticleT result = tracker_->getResult ();
-    Eigen::Affine3f transformation = tracker_->toEigenMatrix (result);
+        //move close to camera a little for better visualization
+        transformation.translation () += Eigen::Vector3f (0.0f, 0.0f, -0.005f);
+        CloudPtr result_cloud (new Cloud ());
+        pcl::transformPointCloud<RefPointType> (*(tracker_->getReferenceCloud ()), *result_cloud, transformation);
 
-    //move close to camera a little for better visualization
-    transformation.translation () += Eigen::Vector3f (0.0f, 0.0f, -0.005f);
-    CloudPtr result_cloud (new Cloud ());
-    pcl::transformPointCloud<RefPointType> (*(tracker_->getReferenceCloud ()), *result_cloud, transformation);
-
-    //Draw blue model reference point cloud
-    {
-        pcl::visualization::PointCloudColorHandlerCustom<RefPointType> blue_color (result_cloud, 0, 0, 255);
-
-        if (!viewer->updatePointCloud (result_cloud, blue_color, "resultcloud"))
-        viewer->addPointCloud (result_cloud, blue_color, "resultcloud");
-    }
+        renderPointCloud<RefPointType>(viewer, result_cloud, "reference", Color(0,0,1), 3);
     }
 }
 
@@ -209,14 +208,15 @@ void renderCloud(ProcessPointClouds<pcl::PointXYZRGBA> *pointProcessorI,
                        pcl::visualization::PCLVisualizer::Ptr &viewer,
                        CloudPtr &cloudObjects, CloudPtr &cloudPlane) {
 
-    //* Render both objects and plane
-    renderPointCloud(viewer, cloudObjects, "cloud_objects", Color(1,1,1));
-    renderPointCloud(viewer, cloudPlane, "plane_cloud", Color(0,1,0));
-
     for (std::size_t indx = 0; indx < tracking_objects.size(); indx++) {
         ParticleFilter::Ptr tracker_ = tracking_objects[indx];
         drawTrackedObject(viewer, tracker_, cloudObjects);
     }
+
+    //* Render both objects and plane
+    renderPointCloud<pcl::PointXYZRGBA>(viewer, cloudObjects, "cloud_objects", Color(1,1,1), 4);
+    renderPointCloud<pcl::PointXYZRGBA>(viewer, cloudPlane, "cloud_plane", Color(0,1,0), 4);
+
 }
 
 /**
@@ -277,8 +277,8 @@ int main(int argc, char **argv) {
 
     while (!viewer->wasStopped()) {
         //* Clear viewer for the new frame
-        viewer->removeAllPointClouds();
-        viewer->removeAllShapes();
+        // viewer->removeAllPointClouds();
+        // viewer->removeAllShapes();
 
         //* Load PCD file
         std::string name_file = (*streamIterator).string();
