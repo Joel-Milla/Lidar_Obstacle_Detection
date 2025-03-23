@@ -56,6 +56,9 @@ The next steps where preparing image for obstacle detections:
 <img src="./README_FILES/detection.gif" width="700" height="400" />
 <img src="./README_FILES/video2.gif" width="700" height="400" />
 
+5. After all the previous steps, I implemented a final functionality of tracking the cyclist through frames. The tracking algorithm in PCL uses Particle Filter Algorithm to track an object through frames. Below can be seen the result.
+
+<img src="./README_FILES/tracking.gif" width="700" height="400" />
 
 ### Sensor Fusion course for self-driving cars.
 
