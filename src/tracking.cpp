@@ -38,6 +38,7 @@ std::size_t indx_to_show = 4;
  * @return ParticleFilter::Ptr pointer to the tracker
  */
 ParticleFilter::Ptr createTracker(const CloudPtr &target_cloud) {
+    //* Noise model for particle algorithm
     std::vector<double> default_step_covariance =
         std::vector<double>(6, 0.05 * 0.05); // Was 0.015 * 0.015
     default_step_covariance[3] *= 40.0;      // Roll
@@ -48,6 +49,7 @@ ParticleFilter::Ptr createTracker(const CloudPtr &target_cloud) {
         std::vector<double>(6, 0.00001);
     std::vector<double> default_initial_mean = std::vector<double>(6, 0.0);
 
+    //* Adjusts the number of particles needed based on the complexity of the distribution
     pcl::tracking::KLDAdaptiveParticleFilterOMPTracker<RefPointType,
                                                         ParticleT>::Ptr
         tracker(
@@ -88,7 +90,7 @@ ParticleFilter::Ptr createTracker(const CloudPtr &target_cloud) {
     add the Coherence instance to coherence variable with addPointCoherence
     function.
     */
-    // Setup coherence object for tracking
+    //* How PCL calculates particle weights
     pcl::tracking::ApproxNearestPairPointCloudCoherence<RefPointType>::Ptr
         coherence(new pcl::tracking::ApproxNearestPairPointCloudCoherence<
                     RefPointType>);
@@ -108,7 +110,7 @@ ParticleFilter::Ptr createTracker(const CloudPtr &target_cloud) {
     In this part, we set the point cloud loaded from pcd file as reference model
     to tracker and also set model’s transform values.
     */
-    // prepare the model of tracker's target
+    //* Compute centroid of object, because tracking algorithm will track object relative to its centroid
     Eigen::Vector4f c;
     Eigen::Affine3f trans = Eigen::Affine3f::Identity();
 
@@ -119,6 +121,7 @@ ParticleFilter::Ptr createTracker(const CloudPtr &target_cloud) {
 
     trans.translation().matrix() = Eigen::Vector3f(c[0], c[1], c[2]);
 
+    //* Transforms cloud to be centered to the origin, to make calculations simpler
     pcl::transformPointCloud<RefPointType>(*target_cloud, *transed_ref,
                                             trans.inverse());
     // set reference model and trans
@@ -196,6 +199,7 @@ void drawTrackedObject(pcl::visualization::PCLVisualizer::Ptr &viewer, const Par
 
     ParticleFilter::PointCloudStatePtr particles = tracker_->getParticles ();
 
+    //* Makes best estimate for objects position
     if (particles) {
         //Set pointCloud with particle's points
         pcl::PointCloud<pcl::PointXYZ>::Ptr particle_cloud (new pcl::PointCloud<pcl::PointXYZ> ());
