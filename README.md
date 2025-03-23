@@ -77,7 +77,7 @@ The workspace provided projects. Versions used are as follows:
 * Ubuntu 22.04
 * PCL - v1.12
 * C++ v17
-
+* gcc 11.4.0
 
 ## Local Installation
 
@@ -113,8 +113,12 @@ add_definitions(${PCL_DEFINITIONS})
 list(REMOVE_ITEM PCL_LIBRARIES "vtkproj4")
 
 
-add_executable (environment src/environment.cpp src/render/render.cpp src/processPointClouds.cpp src/quiz/cluster/cluster.cpp src/quiz/cluster/kdtree.cpp src/helper/kdtree.cpp) 
+add_executable (environment src/environment.cpp src/render/render.cpp src/processPointClouds.cpp src/helper/cluster.cpp src/helper/kdtree.cpp src/helper/segment.cpp)
 target_link_libraries (environment ${PCL_LIBRARIES})
+
+# Following are commented out but can be used to generate executable that track cyclist
+# add_executable (tracking src/tracking.cpp src/render/render.cpp src/processPointClouds.cpp src/helper/cluster.cpp src/helper/kdtree.cpp src/helper/segment.cpp)
+# target_link_libraries (tracking ${PCL_LIBRARIES})
    ```
 
 3. Execute the following commands in a terminal
