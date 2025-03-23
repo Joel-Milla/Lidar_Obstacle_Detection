@@ -29,7 +29,7 @@ typedef pcl::tracking::ParticleFilterTracker<RefPointType, ParticleT>
 
 std::vector<ParticleFilter::Ptr> tracking_objects;
 
-std::size_t indx_to_show = 0;
+std::size_t indx_to_show = 4;
 
 /**
  * @brief Create a Tracker object which will be stable during all frames
@@ -149,7 +149,7 @@ void processFirstFrame(ProcessPointClouds<pcl::PointXYZRGBA> *pointProcessorI,
 
     //* RENDER BOUNDING BOXES AROUND OBJECTS
     for (std::size_t indx = 0; indx < cloudClusters.size(); indx++) {
-        if (indx != indx_to_show) continue;
+        // if (indx != indx_to_show) continue;
 
         CloudPtr &cluster = cloudClusters[indx];
         ParticleFilter::Ptr tracker = createTracker(cluster);
@@ -171,7 +171,7 @@ void renderPointCloud(pcl::visualization::PCLVisualizer::Ptr& viewer, const type
 	viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, size, name);
 }
 
-void drawTrackedObject(pcl::visualization::PCLVisualizer::Ptr &viewer, const ParticleFilter::Ptr tracker_, const CloudPtr& cloud) {
+void drawTrackedObject(pcl::visualization::PCLVisualizer::Ptr &viewer, const ParticleFilter::Ptr tracker_, const CloudPtr& cloud, size_t id) {
     //* Render particles
     tracker_->setInputCloud (cloud);
     tracker_->compute ();
@@ -190,7 +190,7 @@ void drawTrackedObject(pcl::visualization::PCLVisualizer::Ptr &viewer, const Par
             particle_cloud->push_back (point);
         }
 
-        renderPointCloud<pcl::PointXYZ>(viewer, particle_cloud, "particles", Color(1,0,0), 3);
+        renderPointCloud<pcl::PointXYZ>(viewer, particle_cloud, ("particles" + std::to_string(id)), Color(1,0,0), 3);
 
         ParticleT result = tracker_->getResult ();
         Eigen::Affine3f transformation = tracker_->toEigenMatrix (result);
@@ -200,7 +200,7 @@ void drawTrackedObject(pcl::visualization::PCLVisualizer::Ptr &viewer, const Par
         CloudPtr result_cloud (new Cloud ());
         pcl::transformPointCloud<RefPointType> (*(tracker_->getReferenceCloud ()), *result_cloud, transformation);
 
-        renderPointCloud<RefPointType>(viewer, result_cloud, "reference", Color(0,0,1), 3);
+        renderPointCloud<RefPointType>(viewer, result_cloud, ("reference" + std::to_string(id)), Color(0,0,1), 3);
     }
 }
 
@@ -210,7 +210,7 @@ void renderCloud(ProcessPointClouds<pcl::PointXYZRGBA> *pointProcessorI,
 
     for (std::size_t indx = 0; indx < tracking_objects.size(); indx++) {
         ParticleFilter::Ptr tracker_ = tracking_objects[indx];
-        drawTrackedObject(viewer, tracker_, cloudObjects);
+        drawTrackedObject(viewer, tracker_, cloudObjects, indx);
     }
 
     //* Render both objects and plane
@@ -256,7 +256,7 @@ void initCamera(CameraAngle setAngle,
 
 int main(int argc, char **argv) {
     //* Number four is the cyclist
-    indx_to_show = std::stoi(argv[1]);
+    // indx_to_show = std::stoi(argv[1]);
 
     if (OUTPUT_LOGS)
         std::cout << "Starting enviroment" << std::endl;
