@@ -149,7 +149,7 @@ void processFirstFrame(ProcessPointClouds<pcl::PointXYZRGBA> *pointProcessorI,
 
     //* RENDER BOUNDING BOXES AROUND OBJECTS
     for (std::size_t indx = 0; indx < cloudClusters.size(); indx++) {
-        // if (indx != indx_to_show) continue;
+        if (indx != indx_to_show) continue;
 
         CloudPtr &cluster = cloudClusters[indx];
         ParticleFilter::Ptr tracker = createTracker(cluster);
@@ -157,6 +157,16 @@ void processFirstFrame(ProcessPointClouds<pcl::PointXYZRGBA> *pointProcessorI,
     }
 }
 
+/**
+ * @brief Recieves a cloud and its parameters, and is in charge of rendering it to the viewer
+ * 
+ * @tparam PointT 
+ * @param viewer 
+ * @param cloud cloud to be rendered
+ * @param name id of the cloud in the view
+ * @param color 
+ * @param size size of the point in the viewer
+ */
 template <typename PointT>
 void renderPointCloud(pcl::visualization::PCLVisualizer::Ptr& viewer, const typename pcl::PointCloud<PointT>::Ptr& cloud, std::string name, Color color, double size) {
 	// viewer->addPointCloud<pcl::PointXYZRGBA> (cloud, name);
@@ -171,6 +181,14 @@ void renderPointCloud(pcl::visualization::PCLVisualizer::Ptr& viewer, const type
 	viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, size, name);
 }
 
+/**
+ * @brief Function in charge of tracking objects across different views. If found the object in the new frame, then it keeps tabs on it
+ * 
+ * @param viewer The viewer that will display the point cloud
+ * @param tracker_ The one in charge of tracking the object through the cloud
+ * @param cloud Cloud of obstacles where the tracking will happen
+ * @param id Id to unique identify the object being tracked
+ */
 void drawTrackedObject(pcl::visualization::PCLVisualizer::Ptr &viewer, const ParticleFilter::Ptr tracker_, const CloudPtr& cloud, size_t id) {
     //* Render particles
     tracker_->setInputCloud (cloud);
@@ -204,6 +222,14 @@ void drawTrackedObject(pcl::visualization::PCLVisualizer::Ptr &viewer, const Par
     }
 }
 
+/**
+ * @brief Receives the cloud of objects and plane, and is in charge of calling the trackers to track and calling the render functions 
+ * 
+ * @param pointProcessorI Object contain function to process the point cloud
+ * @param viewer 
+ * @param cloudObjects 
+ * @param cloudPlane 
+ */
 void renderCloud(ProcessPointClouds<pcl::PointXYZRGBA> *pointProcessorI,
                        pcl::visualization::PCLVisualizer::Ptr &viewer,
                        CloudPtr &cloudObjects, CloudPtr &cloudPlane) {
